@@ -1,0 +1,32 @@
+name: lg_quickrig
+description: "LG QuickRig — Home screen widget & Quick Settings companion for Liquid Galaxy."
+publish_to: 'none'
+
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # SSH transport to the LG master node.
+  dartssh2: ^2.9.0
+
+  # Encrypted storage for SSH credentials (host, username, password).
+  # Uses Android Keystore (API 23+) / iOS Keychain / libsecret on Linux.
+  flutter_secure_storage: ^9.2.2
+
+  # Service locator / dependency injection — no code generation required.
+  get_it: ^8.0.2
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

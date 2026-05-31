@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Placeholder layout for the LG QuickRig home screen widget.
+    Replace the TextView with your actual widget UI when implementing
+    LGHomeWidgetProvider.kt.
+
+    Widgets run in a remote process (the launcher), so only RemoteViews-
+    compatible View classes are allowed here — standard layouts and basic
+    widgets (TextView, ImageView, Button, etc.). No custom View subclasses.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:background="#CC000000"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/widget_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="LG QuickRig"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp"
+        android:fontFamily="sans-serif-medium" />
+
+</LinearLayout>

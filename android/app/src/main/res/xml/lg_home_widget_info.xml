@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    AppWidgetProviderInfo for the LG QuickRig home screen widget.
+
+    Uncomment the <receiver> block in AndroidManifest.xml and implement
+    LGHomeWidgetProvider.kt when you're ready to build this widget.
+
+    Key attributes to configure:
+      minWidth / minHeight  — smallest size the user can resize to
+      updatePeriodMillis    — system-scheduled refresh rate (min 30 min)
+      previewImage          — shown in the widget picker
+      widgetCategory        — home_screen | keyguard | searchbox
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="110dp"
+    android:minHeight="40dp"
+    android:updatePeriodMillis="0"
+    android:initialLayout="@layout/lg_home_widget"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen" />
