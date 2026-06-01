@@ -9,7 +9,7 @@
 ╚══════╝ ╚═════╝      ╚══▀▀═╝  ╚═════╝ ╚═╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝ ╚═════╝
 ```
 
-### Control your Liquid Galaxy cluster from your home screen — no terminal needed.
+### Flutter-based Android + Linux companion app for Liquid Galaxy.
 
 <br/>
 
@@ -24,7 +24,7 @@
 [![SSH](https://img.shields.io/badge/SSH-dartssh2-4A90D9?style=flat-square&logo=gnubash&logoColor=white)](https://pub.dev/packages/dartssh2)
 [![Storage](https://img.shields.io/badge/Storage-flutter__secure__storage-E63946?style=flat-square&logo=keepassxc&logoColor=white)](https://pub.dev/packages/flutter_secure_storage)
 [![DI](https://img.shields.io/badge/DI-get__it-FF9F1C?style=flat-square)](https://pub.dev/packages/get_it)
-[![KML](https://img.shields.io/badge/Protocol-KML%20%2B%20SSH-2D6A4F?style=flat-square&logo=googlemaps&logoColor=white)](https://developers.google.com/kml)
+[![Gemini](https://img.shields.io/badge/AI-Gemini%20API-4285F4?style=flat-square&logo=google&logoColor=white)](https://ai.google.dev)
 
 </div>
 
@@ -32,48 +32,43 @@
 
 ## What is LG QuickRig?
 
-**Liquid Galaxy** is an open-source multi-display platform that renders
-synchronised panoramic views across a rig of 3–9 Linux machines running Google
-Earth. Managing it normally means SSH-ing into the master node every single time.
+**Liquid Galaxy** is an open-source multi-display platform that renders synchronised panoramic views across a rig of 3–9 Linux machines running Google Earth. Managing it normally means SSH-ing into the master node every single time.
 
-**LG QuickRig** eliminates that friction — one tap from your home screen or
-notification shade to reboot, sync, push KML, or fly to any coordinate.
+**LG QuickRig** eliminates that friction — control your entire Liquid Galaxy cluster from your Android home screen or Linux desktop without opening a terminal. One tap to reboot, sync, blank screens, or restart slaves. AI-powered voice commands and Gemini-driven log monitoring take it further: speak to your rig and let the system detect anomalies before they become incidents.
 
 ---
 
 ## App Preview
 
-> Dashboard · SSH Console · Settings — dark teal Material 3 theme
+> Dashboard · LG Commands · SSH Console — dark teal Material 3 theme
 
 ```
 ╔═══════════════════════════════════════════╗   ╔═══════════════════════════════════════════╗
-║  LG QuickRig          ● Connected  ⚙     ║   ║  SSH Console          ● Connected  ⚙     ║
+║  LG QuickRig          ● Connected  ⚙     ║   ║  LG Commands          ● Connected        ║
 ╠═══════════════════════════════════════════╣   ╠═══════════════════════════════════════════╣
-║                                           ║   ║  Connection                               ║
-║  ┌─────────────────────────────────────┐  ║   ║  ┌──────────────────┐  ┌───────────┐     ║
-║  │ Connection                          │  ║   ║  │ Host  192.168.2.2│  │ Port  22  │     ║
-║  │                                     │  ║   ║  └──────────────────┘  └───────────┘     ║
-║  │ lg@192.168.2.2  ·  3 nodes         │  ║   ║  ┌──────────────────┐  ┌───────────┐     ║
-║  │                                     │  ║   ║  │ User   lg        │  │ ••••••••  │     ║
-║  │ ╔═════════════════════════════════╗ │  ║   ║  └──────────────────┘  └───────────┘     ║
-║  │ ║         ◈  Disconnect          ║ │  ║   ║  ╔═══════════════════════════════════╗    ║
-║  │ ╚═════════════════════════════════╝ │  ║   ║  ║         ◈  Connect               ║    ║
-║  └─────────────────────────────────────┘  ║   ║  ╚═══════════════════════════════════╝    ║
-║                                           ║   ║                                           ║
-║  Quick Actions                            ║   ║  Command                                  ║
-║  ┌───────────────┐  ┌───────────────────┐ ║   ║  ┌─────────────────────────────┐ ┌─────┐ ║
-║  │ 🔄 Reboot    │  │ 🔁 Restart Svcs   │ ║   ║  │ echo hello LG               │ │ Run │ ║
-║  └───────────────┘  └───────────────────┘ ║   ║  └─────────────────────────────┘ └─────┘ ║
-║  ┌───────────────┐  ┌───────────────────┐ ║   ║                                           ║
-║  │ ⚡ Shutdown  │  │ ↻  Sync           │ ║   ║  Output                        [Clear]    ║
-║  └───────────────┘  └───────────────────┘ ║   ║  ┌─────────────────────────────────────┐ ║
-║  ┌───────────────┐  ┌───────────────────┐ ║   ║  │14:32:01 [OUT] > echo hello LG       │ ║
-║  │ 🗑 Clean KML │  │ >_  SSH Console   │ ║   ║  │14:32:01 [OUT] hello LG              │ ║
-║  └───────────────┘  └───────────────────┘ ║   ║  │14:32:08 [OUT] > df -h /             │ ║
-║                                           ║   ║  │14:32:08 [OUT] Filesystem  Size  Use  │ ║
-║     Last action: Reboot  ·  14:32:01      ║   ║  │           /dev/sda1   32G  12G  38%  │ ║
-╚═══════════════════════════════════════════╝   ╚═══════════════════════════════════════════╝
-          Dashboard                                          SSH Console
+║                                           ║   ║  ┌─────────────────────────────────────┐  ║
+║  ┌─────────────────────────────────────┐  ║   ║  │ ● Connected — ready to send commands│  ║
+║  │ Connection                          │  ║   ║  └─────────────────────────────────────┘  ║
+║  │ lg@192.168.2.2  ·  3 nodes         │  ║   ║                                           ║
+║  │ ╔═════════════════════════════════╗ │  ║   ║  Commands                                 ║
+║  │ ║         ◈  Disconnect          ║ │  ║   ║  ┌───────────────┐  ┌───────────────────┐ ║
+║  └─────────────────────────────────────┘  ║   ║  │ 🔄 Reboot    │  │ ⚡ Shutdown       │ ║
+║                                           ║   ║  └───────────────┘  └───────────────────┘ ║
+║  Quick Actions                            ║   ║  ┌───────────────┐  ┌───────────────────┐ ║
+║  ┌───────────────┐  ┌───────────────────┐ ║   ║  │ ↻  Sync      │  │ 🔁 Restart Slaves │ ║
+║  │ 🔄 Reboot    │  │ 🔁 Restart Svcs   │ ║   ║  └───────────────┘  └───────────────────┘ ║
+║  └───────────────┘  └───────────────────┘ ║   ║  ┌───────────────┐                       ║
+║  ┌───────────────┐  ┌───────────────────┐ ║   ║  │ 📺 Blank Scrn │                       ║
+║  │ ⚡ Shutdown  │  │ ↻  Sync           │ ║   ║  └───────────────┘                       ║
+║  └───────────────┘  └───────────────────┘ ║   ║                                           ║
+║  ┌───────────────┐  ┌───────────────────┐ ║   ║  Output                        [Clear]    ║
+║  │ 📺 Blank Scrn│  │ 🗑 Clean KML      │ ║   ║  ┌─────────────────────────────────────┐ ║
+║  └───────────────┘  └───────────────────┘ ║   ║  │14:32:01 [OUT] Running: Sync…        │ ║
+║  ┌───────────────┐  ┌───────────────────┐ ║   ║  │14:32:02 [OUT] Sync completed.       │ ║
+║  │ ⌨ LG Cmds   │  │ >_  SSH Console   │ ║   ║  └─────────────────────────────────────┘ ║
+║  └───────────────┘  └───────────────────┘ ║   ╚═══════════════════════════════════════════╝
+╚═══════════════════════════════════════════╝             LG Commands Screen
+              Dashboard
 ```
 
 ---
@@ -82,20 +77,25 @@ notification shade to reboot, sync, push KML, or fly to any coordinate.
 
 | | Feature | Status |
 |---|---|---|
-| 🔌 | Secure SSH transport — timeout, retry, auto-reconnect | ✅ Done |
+| 🔌 | Secure SSH transport — timeout, retry (×3), auto-reconnect | ✅ Done |
 | 🔐 | Encrypted credential storage (Keystore / Keychain / libsecret) | ✅ Done |
 | 📊 | Dashboard with live connection-status badge | ✅ Done |
-| ⚡ | Quick Actions — Reboot, Restart, Shutdown, Sync, Clean KML | ✅ Done |
+| ⚡ | Predefined commands — Reboot, Shutdown, Sync, Restart Slaves, Blank Screens | ✅ Done |
 | 💻 | SSH Console — raw command input with timestamped log | ✅ Done |
+| ⌨️ | LG Commands screen — preset buttons + output log + connection status | ✅ Done |
 | ⚙️ | Settings screen — self-loading, secure-enclave persistence | ✅ Done |
 | 🗺️ | KML file management on the master HTTP server | ✅ Done |
 | 🌍 | Orbit / FlyTo via `gx:FlyTo` KML + `LookAt` | ✅ Done |
 | 🎬 | Tour control via `gs_cmd` mechanism | ✅ Done |
-| 🤖 | Kotlin platform channel skeleton for native widgets | ✅ Done |
-| 📱 | Android home-screen App Widget | 🔜 Phase 1 |
-| 🔔 | Quick Settings tile (one-tap from notification shade) | 🔜 Phase 2 |
-| 🖥️ | Multi-node status grid (CPU / RAM / disk per slave) | 🔜 Phase 3 |
-| 📁 | KML library — browse, upload, target specific displays | 🔜 Phase 4 |
+| 📱 | Android Command Bar home-screen widget (4×1) | 🔜 Week 2 |
+| 🔔 | Android Quick Settings tile (one-tap from notification shade) | 🔜 Week 2 |
+| 📡 | Android Live Status home-screen widget (2×2) | 🔜 Week 3 |
+| 🔧 | Background service — persistent SSH engine for widgets | 🔜 Week 3 |
+| 🖥️ | Linux desktop build — same Flutter codebase | 🔜 Week 4 |
+| 🎙️ | AI voice commands — speak to your rig | 🔜 Week 5 |
+| 🤖 | Gemini API integration for natural-language SSH control | 🔜 Week 5 |
+| 📋 | Gemini-powered SSH log monitoring + anomaly detection | 🔜 Week 6 |
+| 📐 | Adaptive widget layout driven by AI | 🔜 Week 6 |
 
 ---
 
@@ -105,12 +105,14 @@ notification shade to reboot, sync, push KML, or fly to any coordinate.
 flowchart TD
     subgraph UI["🖼️  UI Layer"]
         DS[DashboardScreen]
+        LGC[LGCommandsScreen]
         SS[SSHTestScreen]
         SET[SettingsScreen]
     end
 
     subgraph CTRL["🎮  Controllers  ·  ChangeNotifier"]
         DC[DashboardController]
+        LGCC[LGCommandsController]
         SC[SSHTestController]
     end
 
@@ -127,9 +129,11 @@ flowchart TD
     end
 
     DS --> DC
+    LGC --> LGCC
     SS --> SC
     DC --> CMD
     DC --> KML
+    LGCC --> CMD
     SC --> CLIENT
     CMD --> CLIENT
     KML --> CMD
@@ -158,7 +162,7 @@ stateDiagram-v2
     Disconnected --> Connecting : connect()
     Connecting --> Connected : ✅ authenticated
     Connecting --> Disconnected : ❌ auth failure\n(no retry)
-    Connecting --> Disconnected : ❌ network error\n(after N retries)
+    Connecting --> Disconnected : ❌ network error\n(after 3 retries)
 
     Connected --> Disconnecting : disconnect()
     Connected --> Disconnected : 🔌 remote closes socket\n(reboot · shutdown · network loss)
@@ -249,7 +253,10 @@ lg_quickrig/
 │   ├── 🖼️ features/
 │   │   ├── dashboard/
 │   │   │   ├── dashboard_controller.dart  ← auto-connect · quick-action dispatch
-│   │   │   └── dashboard_screen.dart      ← connection card + 6-tile action grid
+│   │   │   └── dashboard_screen.dart      ← connection card + 8-tile action grid
+│   │   ├── lg_commands/
+│   │   │   ├── lg_commands_controller.dart ← preset command dispatch + output log
+│   │   │   └── lg_commands_screen.dart     ← buttons + output log + status header
 │   │   ├── ssh_test/
 │   │   │   ├── ssh_test_controller.dart   ← log management · DI-aware
 │   │   │   └── ssh_test_screen.dart       ← dev console · timestamped output
@@ -269,15 +276,17 @@ lg_quickrig/
 
 <div align="center">
 
-| Layer | Package | Version | Purpose |
-|:---:|:---:|:---:|:---|
-| ![Flutter](https://img.shields.io/badge/-Flutter-02569B?logo=flutter&logoColor=white) | `flutter` | 3.38 | Cross-platform UI for Android + Linux |
-| ![Dart](https://img.shields.io/badge/-Dart-0175C2?logo=dart&logoColor=white) | `dart` | 3.10 | Null-safe, async-first language |
-| ![SSH](https://img.shields.io/badge/-SSH-4A90D9?logo=gnubash&logoColor=white) | `dartssh2` | ^2.9 | Pure-Dart SSH2 — no JNI, no native libs |
-| ![Security](https://img.shields.io/badge/-Secure-E63946?logo=keepassxc&logoColor=white) | `flutter_secure_storage` | ^9.2 | Keystore / Keychain / libsecret |
-| ![DI](https://img.shields.io/badge/-DI-FF9F1C) | `get_it` | ^8.0 | Zero-codegen service locator |
-| ![Kotlin](https://img.shields.io/badge/-Kotlin-7F52FF?logo=kotlin&logoColor=white) | Kotlin coroutines | bundled | Platform channels for native widgets |
-| ![State](https://img.shields.io/badge/-State-00B4D8) | `ChangeNotifier` | built-in | Reactive UI without extra packages |
+| Layer | Technology | Purpose |
+|:---:|:---:|:---|
+| ![Flutter](https://img.shields.io/badge/-Flutter-02569B?logo=flutter&logoColor=white) | Flutter 3.38 | Cross-platform UI — Android + Linux from one codebase |
+| ![Dart](https://img.shields.io/badge/-Dart-0175C2?logo=dart&logoColor=white) | Dart 3.10 | Null-safe, async-first application logic |
+| ![Kotlin](https://img.shields.io/badge/-Kotlin-7F52FF?logo=kotlin&logoColor=white) | Kotlin | Android platform channels, widgets, Quick Settings tile |
+| ![XML](https://img.shields.io/badge/-XML-F7931E?logo=html5&logoColor=white) | XML | Android widget layouts (RemoteViews), AppWidgetProviderInfo |
+| ![SSH](https://img.shields.io/badge/-SSH-4A90D9?logo=gnubash&logoColor=white) | `dartssh2 ^2.9` | Pure-Dart SSH2 — no JNI, no native libs |
+| ![Security](https://img.shields.io/badge/-Secure-E63946?logo=keepassxc&logoColor=white) | `flutter_secure_storage ^9.2` | AES-256-GCM via Keystore / Keychain / libsecret |
+| ![DI](https://img.shields.io/badge/-DI-FF9F1C) | `get_it ^8.0` | Zero-codegen service locator |
+| ![Gemini](https://img.shields.io/badge/-Gemini-4285F4?logo=google&logoColor=white) | Gemini API | Voice commands, log monitoring, anomaly detection |
+| ![State](https://img.shields.io/badge/-State-00B4D8) | `ChangeNotifier` | Reactive UI without extra packages |
 
 </div>
 
@@ -348,8 +357,8 @@ await lgSSHClient.connect(
     username: 'lg', password: 'yourpass',
     nodeCount: 3,
   ),
-  maxRetries: 3,         // attempts before giving up
-  retryDelay: Duration(seconds: 2),   // delay between attempts
+  maxRetries: 3,
+  retryDelay: Duration(seconds: 2),
   connectTimeout: Duration(seconds: 10),
 );
 ```
@@ -396,36 +405,30 @@ final output = await lgSSHClient.executeCommand(
 
 ## Service Layer
 
-### Cluster-wide commands (`LGCommandService`)
+### Predefined commands (`LGCommandService`)
 
 ```dart
 // Raw execution on master (LG1)
 await cmd.execute('echo hello from master');
 
-// Execute on slave 2 via ssh-from-master — uses the stored password
+// Execute on a slave via ssh-from-master
 await cmd.executeOnSlave(2, 'df -h /');
 
-// System operations
-await cmd.reboot();          // slaves 3→2→1 in order; connection drops after
-await cmd.shutdown();        // same order; socket closes
-await cmd.restartServices(); // pkill chrome + lg-relaunch on every node
-await cmd.sync();            // ~/scripts/lg-sync
+// Predefined cluster commands
+await cmd.reboot();           // slaves 3→2→1 then master; connection drops after
+await cmd.shutdown();         // same order; socket closes
+await cmd.restartServices();  // pkill chrome + lg-relaunch on every node
+await cmd.sync();             // ~/scripts/lg-sync
+await cmd.blankScreens();     // write empty KML to each slave + clear kmls.txt
 ```
 
 ### KML management (`LGKMLController`)
 
 ```dart
-// Write KML to the master's built-in HTTP server
-await kml.sendKML(myKmlString, slave: 1);
-
-// Target a specific slave display
-await kml.sendSlaveKML(kml, 3);
-
-// Register a URL in kmls.txt so the cluster loads it
+await kml.sendKML(myKmlString, slave: 1);       // write to master's HTTP server
+await kml.sendSlaveKML(kml, 3);                 // target a specific display
 await kml.addKMLReference('http://lg1/kml/my_scene.kml');
-
-// Remove all QuickRig files + strip their kmls.txt references
-await kml.cleanKML();
+await kml.cleanKML();                           // remove all QuickRig files
 ```
 
 <details>
@@ -463,31 +466,18 @@ await kml.cleanKML();
 ### Orbit / FlyTo (`LGOrbitController`)
 
 ```dart
-// Fly smoothly to any coordinate
-await orbit.flyTo(
-  lat: 48.8566, lng: 2.3522,   // Paris, France
-  altitude: 0,
-  range: 5000,    // metres — zoom level
-  tilt: 60,       // 0 = top-down, 90 = horizon
-  heading: 45,    // compass bearing
-);
-
-await orbit.lookAt(lat: 27.1751, lng: 78.0421, altitudeM: 2000); // Taj Mahal
-
-await orbit.stopOrbit(); // remove the FlyTo override, return to default view
+await orbit.flyTo(lat: 48.8566, lng: 2.3522, range: 5000, tilt: 60, heading: 45);
+await orbit.lookAt(lat: 27.1751, lng: 78.0421, altitudeM: 2000);
+await orbit.stopOrbit();
 ```
 
 ### Tour control (`LGTourController`)
 
 ```dart
-await tour.startTour('World Heritage Sites');  // gplaytour=World Heritage Sites
-await tour.stopTour();                          // gplaytour=
-await tour.exitTour();                          // gxplaytour=
+await tour.startTour('World Heritage Sites');
+await tour.stopTour();
+await tour.exitTour();
 ```
-
-> Tours are triggered by atomically writing to `~/gs_cmd` on the master
-> (`/tmp/gs_cmd` → `mv` → `~/gs_cmd`) so the `gsync` watcher never reads
-> a partial file.
 
 ---
 
@@ -506,14 +496,13 @@ graph LR
 ```
 
 ```dart
-// Resolve anywhere in the app — no context, no BuildContext, no Provider
+// Resolve anywhere — no BuildContext, no Provider
 final client = sl<LGSSHClient>();
 final cmd    = sl<LGCommandService>();
 final kml    = sl<LGKMLController>();
 ```
 
-> **Rule:** Controllers that receive a singleton via `sl<T>()` must **never**
-> call `.dispose()` on it. The singleton's lifetime is the app's lifetime.
+> **Rule:** Controllers that receive a singleton via `sl<T>()` must **never** call `.dispose()` on it. The singleton's lifetime is the app's lifetime.
 
 ---
 
@@ -528,7 +517,7 @@ CredentialsRepository.save(SSHCredentials)
         ├─ 🤖 Android ──► EncryptedSharedPreferences
         │                  backed by Android Keystore
         │                  AES-256-GCM, hardware-backed on modern devices
-        │                  requires minSdk = 23  (enforced in build.gradle.kts)
+        │                  requires minSdk = 23
         │
         ├─ 🍎 iOS ──────► Keychain Services
         │                  hardware-backed on devices with Secure Enclave
@@ -537,34 +526,23 @@ CredentialsRepository.save(SSHCredentials)
                            encrypted file fallback when no keyring daemon runs
 ```
 
-All 5 fields (`host`, `port`, `username`, `password`, `nodeCount`) go into the
-same enclave. The password is **never** logged, never written to
-`SharedPreferences`, never stored in plain text.
-
-The Settings screen intentionally does not pre-fill the password on load —
-the user must re-type it, confirming knowledge of the credential before it
-is written back.
+All 5 fields (`host`, `port`, `username`, `password`, `nodeCount`) go into the same enclave. The password is **never** logged, never written to `SharedPreferences`, never stored in plain text.
 
 ---
 
 ## Android Platform Channels
 
-> **Why this exists:** Android App Widgets and Quick Settings tiles run inside
-> the **launcher / System UI process** — a completely different process from
-> the Flutter app. They cannot call Dart directly. A background `FlutterEngine`
-> must be spawned and Dart logic invoked via `MethodChannel`.
+> Android App Widgets and Quick Settings tiles run inside the **launcher / System UI process** — a completely different process from the Flutter app. A background `FlutterEngine` is spawned and Dart logic invoked via `MethodChannel`.
 
 ```
 ┌──────────────────────┐        MethodChannel         ┌─────────────────────────┐
 │   Android Widget     │  ───────────────────────►   │   Dart / Flutter        │
 │   (launcher process) │  "com.liqtech.lg_quickrig   │   (background engine)   │
 │                      │    /commands"               │                         │
-│   LGHomeWidgetProvider│ ◄───────────────────────── │   LGCommandChannel.kt   │
-│   LGQuickSettingsTile│        result.success()     │   → LGCommandService    │
+│  LGHomeWidgetProvider│ ◄───────────────────────── │   LGCommandChannel.kt   │
+│  LGQuickSettingsTile │        result.success()     │   → LGCommandService    │
 └──────────────────────┘                             └─────────────────────────┘
 ```
-
-### Kotlin side — current skeleton
 
 ```kotlin
 // LGCommandChannel.kt
@@ -572,13 +550,9 @@ MethodChannel(messenger, CHANNEL).setMethodCallHandler { call, result ->
     when (call.method) {
         "executeSSHCommand" -> {
             val cmd = call.argument<String>("command") ?: ""
-            // ⚠️  Handler runs on the PLATFORM THREAD — never block it!
-            // Move SSH work to Dispatchers.IO:
             CoroutineScope(Dispatchers.IO).launch {
-                val output = sshExecute(cmd)          // off main thread
-                withContext(Dispatchers.Main) {
-                    result.success(output)             // back on main thread
-                }
+                val output = sshExecute(cmd)
+                withContext(Dispatchers.Main) { result.success(output) }
             }
         }
         "getConnectionStatus" -> result.success("unconfigured")
@@ -587,90 +561,20 @@ MethodChannel(messenger, CHANNEL).setMethodCallHandler { call, result ->
 }
 ```
 
-### Dart side (widget button tap → SSH command)
-
-```dart
-const _ch = MethodChannel('com.liqtech.lg_quickrig/commands');
-
-// Called from PendingIntent handler or TileService.onClick()
-final result = await _ch.invokeMethod<String>(
-  'executeSSHCommand',
-  {'command': 'sudo reboot'},
-);
-```
-
 ---
 
 ## Roadmap
 
-```mermaid
-gantt
-    title LG QuickRig — Release Plan
-    dateFormat  YYYY-MM
-    axisFormat  %b %Y
-
-    section ✅ Done
-    SSH module & DI foundation      :done, 2025-01, 2025-02
-    Dashboard + Quick Actions       :done, 2025-02, 2025-03
-    KML · Orbit · Tour services     :done, 2025-03, 2025-03
-    Secure credential storage       :done, 2025-03, 2025-04
-
-    section 🔜 Phase 1 — Widget
-    LGHomeWidgetProvider.kt         :active, 2025-04, 2025-05
-    LGWidgetService (FlutterEngine) :active, 2025-04, 2025-05
-    Widget layout & RemoteViews     :2025-05, 2025-06
-
-    section 🔜 Phase 2 — QS Tile
-    LGQuickSettingsTile.kt          :2025-05, 2025-06
-    Tile state sync with SSH        :2025-06, 2025-07
-
-    section 🔜 Phase 3 — Multi-node Status
-    Parallel SSH to all slaves      :2025-07, 2025-08
-    Per-node CPU/RAM/disk grid      :2025-07, 2025-08
-
-    section 🔜 Phase 4 — KML Library
-    File browser + uploader         :2025-08, 2025-10
-    Targeted display selector       :2025-09, 2025-10
-```
-
-<details>
-<summary>📋 Phase 1 — App Widget implementation checklist</summary>
-
-```
-android/app/src/main/kotlin/…/lg/
-
-[ ] LGHomeWidgetProvider.kt
-    ├── onUpdate()  — inflate RemoteViews from lg_home_widget.xml
-    ├── attach PendingIntent to each button (reboot, sync, clean KML)
-    └── call AppWidgetManager.updateAppWidget()
-
-[ ] LGWidgetService.kt
-    ├── spawn FlutterEngine
-    ├── call LGCommandChannel via MethodChannel
-    └── update widget with result text
-
-AndroidManifest.xml
-[ ] Uncomment <receiver android:name=".lg.LGHomeWidgetProvider"> block
-```
-
-</details>
-
-<details>
-<summary>📋 Phase 2 — Quick Settings Tile implementation checklist</summary>
-
-```
-android/app/src/main/kotlin/…/lg/
-
-[ ] LGQuickSettingsTile.kt  (extends TileService)
-    ├── onClick()         → start LGWidgetService with selected action
-    ├── onStartListening() → update tile icon/label from SSH state
-    └── onStopListening() → unregister state observer
-
-AndroidManifest.xml
-[ ] Uncomment <service android:name=".lg.LGQuickSettingsTile"> block
-```
-
-</details>
+| Week | Focus | Key Deliverables |
+|:---:|:---|:---|
+| **1** ✅ | **SSH Foundation** | `LGSSHClient`, `LGCommandService` (reboot / shutdown / sync / restart slaves / blank screens), secure credential storage, Dashboard, LG Commands screen |
+| **2** 🔜 | **Android Widgets + Platform Channels** | Command Bar widget (4×1), Quick Settings tile, `LGCommandChannel.kt` MethodChannel bridge |
+| **3** 🔜 | **More Widgets + Background Service** | Live Status widget (2×2), `LGWidgetService` background Flutter engine, real-time SSH state in widgets |
+| **4** 🔜 | **Linux Desktop Build** | `linux/` runner, desktop UI polish, release packaging for Debian/Ubuntu |
+| **5** 🔜 | **AI Voice Commands + Gemini Integration** | Speech-to-SSH pipeline, Gemini API wiring, natural-language cluster control |
+| **6** 🔜 | **Log Monitoring + Anomaly Detection + Adaptive Layout** | Gemini-powered SSH log analysis, anomaly alerts, adaptive widget layout |
+| **7** 🔜 | **Testing + Polish** | Unit tests, integration tests, widget tests, UI refinements, edge-case hardening |
+| **8** 🔜 | **Documentation + Submission** | Final docs, demo video, submission-ready release |
 
 ---
 
@@ -705,6 +609,9 @@ export DISPLAY=:0; pkill -9 chrome; sleep 2; ~/bin/lg-relaunch
 # Blank all browser content cluster-wide
 echo "" > /var/www/html/kmls.txt
 
+# Blank a specific slave screen
+echo "" > /var/www/html/kml/slave_2.kml
+
 # Load a KML URL on the cluster
 echo 'http://lg1/kml/my_scene.kml' >> /var/www/html/kmls.txt
 
@@ -721,7 +628,7 @@ sed -i '/lgquickrig/d' /var/www/html/kmls.txt
 <summary>🎬  Tour control</summary>
 
 ```bash
-# Start a named tour (name must match the gx:Tour name value in the KML)
+# Start a named tour (name must match the gx:Tour name in the KML)
 echo 'gplaytour=My Tour Name' > /tmp/gs_cmd && mv /tmp/gs_cmd ~/gs_cmd
 
 # Stop the current tour
@@ -742,9 +649,6 @@ df -h /
 
 # Ping slave 2
 ping -c 3 lg2
-
-# Which process owns the display
-DISPLAY=:0 xdotool search --name "Google Earth"
 
 # Slave SSH connectivity check
 sshpass -p lg ssh lg@lg2 'hostname && uptime'
@@ -770,19 +674,22 @@ cd android && ./gradlew lint
 # 4. Open a PR against main
 ```
 
-### Adding a new Quick Action
+### Adding a new predefined command
 
 ```
 1. lib/services/lg_command_service.dart
-   └── add your method (or create a new service in lib/services/)
+   └── add your method
 
 2. lib/features/dashboard/dashboard_controller.dart
-   └── expose it via _runAction('Label', yourService.yourMethod)
+   └── expose it via _runAction('Label', commandService.yourMethod)
 
 3. lib/features/dashboard/dashboard_screen.dart
    └── add a _TileConfig entry in _QuickActionsGrid
 
-4. If destructive → route through _confirmAndRun() in _DashboardScreenState
+4. lib/features/lg_commands/lg_commands_controller.dart + lg_commands_screen.dart
+   └── add a button in _CommandButtons
+
+5. If destructive → route through _confirmAndRun() / _confirmThenRun()
 ```
 
 ### Adding a new service
@@ -832,6 +739,8 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 [![Flutter](https://img.shields.io/badge/Flutter-blue?logo=flutter&logoColor=white)](https://flutter.dev)
 &nbsp;
 [![dartssh2](https://img.shields.io/badge/dartssh2-pub.dev-blue)](https://pub.dev/packages/dartssh2)
+&nbsp;
+[![Gemini](https://img.shields.io/badge/Gemini%20API-4285F4?logo=google&logoColor=white)](https://ai.google.dev)
 &nbsp;
 [![Keystore](https://img.shields.io/badge/Secured%20by-Platform%20Keystore-red?logo=keepassxc&logoColor=white)](https://pub.dev/packages/flutter_secure_storage)
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/ssh/ssh_credentials.dart';
 import '../../shared/widgets/connection_status_badge.dart';
+import '../lg_commands/lg_commands_screen.dart';
 import '../settings/settings_screen.dart';
 import '../ssh_test/ssh_test_screen.dart';
 import 'dashboard_controller.dart';
@@ -65,7 +66,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 onRestart: _ctrl.restartServices,
                 onSync: _ctrl.sync,
+                onBlankScreens: _ctrl.blankScreens,
                 onCleanKML: _ctrl.cleanKML,
+                onLGCommands: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LGCommandsScreen()),
+                ),
                 onSSHConsole: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const SSHTestScreen()),
@@ -285,7 +291,9 @@ class _QuickActionsGrid extends StatelessWidget {
   final VoidCallback onShutdown;
   final VoidCallback onRestart;
   final VoidCallback onSync;
+  final VoidCallback onBlankScreens;
   final VoidCallback onCleanKML;
+  final VoidCallback onLGCommands;
   final VoidCallback onSSHConsole;
 
   const _QuickActionsGrid({
@@ -294,7 +302,9 @@ class _QuickActionsGrid extends StatelessWidget {
     required this.onShutdown,
     required this.onRestart,
     required this.onSync,
+    required this.onBlankScreens,
     required this.onCleanKML,
+    required this.onLGCommands,
     required this.onSSHConsole,
   });
 
@@ -333,6 +343,13 @@ class _QuickActionsGrid extends StatelessWidget {
         needsConnection: true,
       ),
       _TileConfig(
+        label: 'Blank Screens',
+        icon: Icons.tv_off_outlined,
+        color: Colors.grey,
+        onTap: onBlankScreens,
+        needsConnection: true,
+      ),
+      _TileConfig(
         label: 'Clean KML',
         icon: Icons.delete_sweep_outlined,
         color: Colors.purpleAccent,
@@ -340,11 +357,18 @@ class _QuickActionsGrid extends StatelessWidget {
         needsConnection: true,
       ),
       _TileConfig(
+        label: 'LG Commands',
+        icon: Icons.dashboard_customize_outlined,
+        color: Colors.cyan,
+        onTap: onLGCommands,
+        needsConnection: false,
+      ),
+      _TileConfig(
         label: 'SSH Console',
         icon: Icons.terminal,
         color: Colors.blueGrey,
         onTap: onSSHConsole,
-        needsConnection: false, // always accessible
+        needsConnection: false,
       ),
     ];
 

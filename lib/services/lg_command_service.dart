@@ -123,4 +123,20 @@ class LGCommandService {
       "|| echo 'sync script not found'",
     );
   }
+
+  /// Blanks all LG screens by writing empty KML files to each slave and
+  /// clearing the master's KML reference list.
+  Future<void> blankScreens() async {
+    for (int i = nodeCount; i >= 2; i--) {
+      try {
+        await executeOnSlave(
+          i,
+          'echo "" > /var/www/html/kml/slave_$i.kml',
+        );
+      } on LGSSHException {
+        // Continue even if a slave is unreachable.
+      }
+    }
+    await execute('echo "" > /var/www/html/kmls.txt');
+  }
 }

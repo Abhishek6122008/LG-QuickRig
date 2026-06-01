@@ -136,6 +136,9 @@ class DashboardController extends ChangeNotifier {
   Future<void> sync() =>
       _runAction('Sync', _commandService.sync);
 
+  Future<void> blankScreens() =>
+      _runAction('Blank Screens', _commandService.blankScreens);
+
   Future<void> cleanKML() =>
       _runAction('Clean KML', _kmlController.cleanKML);
 
