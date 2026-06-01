@@ -73,29 +73,19 @@
 
 ---
 
-## Features
+## Roadmap
 
-| | Feature | Status |
-|---|---|---|
-| 🔌 | Secure SSH transport — timeout, retry (×3), auto-reconnect | ✅ Done |
-| 🔐 | Encrypted credential storage (Keystore / Keychain / libsecret) | ✅ Done |
-| 📊 | Dashboard with live connection-status badge | ✅ Done |
-| ⚡ | Predefined commands — Reboot, Shutdown, Sync, Restart Slaves, Blank Screens | ✅ Done |
-| 💻 | SSH Console — raw command input with timestamped log | ✅ Done |
-| ⌨️ | LG Commands screen — preset buttons + output log + connection status | ✅ Done |
-| ⚙️ | Settings screen — self-loading, secure-enclave persistence | ✅ Done |
-| 🗺️ | KML file management on the master HTTP server | ✅ Done |
-| 🌍 | Orbit / FlyTo via `gx:FlyTo` KML + `LookAt` | ✅ Done |
-| 🎬 | Tour control via `gs_cmd` mechanism | ✅ Done |
-| 📱 | Android Command Bar home-screen widget (4×1) | 🔜 Week 2 |
-| 🔔 | Android Quick Settings tile (one-tap from notification shade) | 🔜 Week 2 |
-| 📡 | Android Live Status home-screen widget (2×2) | 🔜 Week 3 |
-| 🔧 | Background service — persistent SSH engine for widgets | 🔜 Week 3 |
-| 🖥️ | Linux desktop build — same Flutter codebase | 🔜 Week 4 |
-| 🎙️ | AI voice commands — speak to your rig | 🔜 Week 5 |
-| 🤖 | Gemini API integration for natural-language SSH control | 🔜 Week 5 |
-| 📋 | Gemini-powered SSH log monitoring + anomaly detection | 🔜 Week 6 |
-| 📐 | Adaptive widget layout driven by AI | 🔜 Week 6 |
+| Week | Focus | Key Deliverables |
+|:---:|:---|:---|
+| **1** ✅ | **SSH Foundation** | `LGSSHClient`, `LGCommandService` (reboot / shutdown / sync / restart slaves / blank screens), secure credential storage, Dashboard, LG Commands screen |
+| **2** 🔜 | **Android Widgets + Platform Channels** | Command Bar widget (4×1), Quick Settings tile, `LGCommandChannel.kt` MethodChannel bridge |
+| **3** 🔜 | **More Widgets + Background Service** | Live Status widget (2×2), `LGWidgetService` background Flutter engine, real-time SSH state in widgets |
+| **4** 🔜 | **Linux Desktop Build** | `linux/` runner, desktop UI polish, release packaging for Debian/Ubuntu |
+| **5** 🔜 | **AI Voice Commands + Gemini Integration** | Speech-to-SSH pipeline, Gemini API wiring, natural-language cluster control |
+| **6** 🔜 | **Log Monitoring + Anomaly Detection + Adaptive Layout** | Gemini-powered SSH log analysis, anomaly alerts, adaptive widget layout |
+| **7** 🔜 | **Testing + Polish** | Unit tests, integration tests, widget tests, UI refinements, edge-case hardening |
+| **8** 🔜 | **Documentation + Submission** | Final docs, demo video, submission-ready release |
+
 
 ---
 
@@ -535,21 +525,6 @@ MethodChannel(messenger, CHANNEL).setMethodCallHandler { call, result ->
     }
 }
 ```
-
----
-
-## Roadmap
-
-| Week | Focus | Key Deliverables |
-|:---:|:---|:---|
-| **1** ✅ | **SSH Foundation** | `LGSSHClient`, `LGCommandService` (reboot / shutdown / sync / restart slaves / blank screens), secure credential storage, Dashboard, LG Commands screen |
-| **2** 🔜 | **Android Widgets + Platform Channels** | Command Bar widget (4×1), Quick Settings tile, `LGCommandChannel.kt` MethodChannel bridge |
-| **3** 🔜 | **More Widgets + Background Service** | Live Status widget (2×2), `LGWidgetService` background Flutter engine, real-time SSH state in widgets |
-| **4** 🔜 | **Linux Desktop Build** | `linux/` runner, desktop UI polish, release packaging for Debian/Ubuntu |
-| **5** 🔜 | **AI Voice Commands + Gemini Integration** | Speech-to-SSH pipeline, Gemini API wiring, natural-language cluster control |
-| **6** 🔜 | **Log Monitoring + Anomaly Detection + Adaptive Layout** | Gemini-powered SSH log analysis, anomaly alerts, adaptive widget layout |
-| **7** 🔜 | **Testing + Polish** | Unit tests, integration tests, widget tests, UI refinements, edge-case hardening |
-| **8** 🔜 | **Documentation + Submission** | Final docs, demo video, submission-ready release |
 
 ---
 
