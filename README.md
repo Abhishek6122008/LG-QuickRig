@@ -153,31 +153,6 @@ flowchart TD
 
 ---
 
-## SSH Connection State Machine
-
-```mermaid
-stateDiagram-v2
-    [*] --> Disconnected : app launch
-
-    Disconnected --> Connecting : connect()
-    Connecting --> Connected : ✅ authenticated
-    Connecting --> Disconnected : ❌ auth failure\n(no retry)
-    Connecting --> Disconnected : ❌ network error\n(after 3 retries)
-
-    Connected --> Disconnecting : disconnect()
-    Connected --> Disconnected : 🔌 remote closes socket\n(reboot · shutdown · network loss)
-
-    Disconnecting --> Disconnected : socket closed
-
-    note right of Connected
-        _watchForRemoteDisconnect()
-        subscribes to rawClient.done
-        — instant, zero polling
-    end note
-```
-
----
-
 ## First-launch Flow
 
 ```mermaid
