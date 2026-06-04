@@ -1,100 +1,116 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+
 import 'lg_command_service.dart';
 
 /// Controls the Liquid Galaxy viewport — fly-to, orbit, and camera reset.
 ///
-/// View commands are issued by writing a KML file containing a
-/// `gx:FlyTo` element to the master's HTTP server. The cluster browser
-/// picks it up via a pre-configured NetworkLink with a short refresh interval.
-///
-/// ── Setup requirement ────────────────────────────────────────────────────
-/// The LG installation must have a NetworkLink in its persistent KML that
-/// polls `http://lg1/kml/lgquickrig_orbit.kml`. Without this NetworkLink
-/// the FlyTo files are written but ignored by the browsers.
-/// ─────────────────────────────────────────────────────────────────────────
+/// View commands are sent by writing a `flytoview=<LookAt>` line to
+/// `/tmp/query.txt`, which the LG master process monitors natively.
+/// No NetworkLink setup is required.
 class LGOrbitController {
   final LGCommandService _commandService;
 
-  static const _kmlDir = '/var/www/html/kml';
-  static const _orbitFile = '$_kmlDir/lgquickrig_orbit.kml';
+  Timer? _orbitTimer;
+  bool _orbitPlaying = false;
+  String? _lastOrbitPosition;
 
   LGOrbitController(this._commandService);
 
+  bool get isOrbitPlaying => _orbitPlaying;
+
   // ---------------------------------------------------------------------------
-  // View commands
+  // Fly-to
   // ---------------------------------------------------------------------------
 
-  /// Smoothly flies the LG view to the given geographic location.
-  ///
-  /// Parameters follow the KML `LookAt` spec:
-  ///   [lat]      Latitude  in decimal degrees (-90 to 90)
-  ///   [lng]      Longitude in decimal degrees (-180 to 180)
-  ///   [altitude] Altitude in metres above ground
-  ///   [range]    Distance from the point to the camera in metres
-  ///   [tilt]     Tilt angle in degrees (0 = top-down, 90 = horizon)
-  ///   [heading]  Compass bearing in degrees (0 = North)
+  /// Smoothly moves the LG camera to the given geographic point.
   Future<void> flyTo({
     required double lat,
     required double lng,
-    double altitude = 0,
-    double range = 1000,
-    double tilt = 60,
+    double range = 10000,
+    double tilt = 0,
     double heading = 0,
   }) async {
-    final kml = _buildFlyToKml(lat, lng, altitude, range, tilt, heading);
-    final escaped = kml.replaceAll("'", r"'\''");
-    await _commandService.execute("echo '$escaped' > $_orbitFile");
-  }
-
-  /// Sets the camera to look straight down at [lat]/[lng] from [altitudeM]
-  /// metres — useful for a top-down map view.
-  Future<void> lookAt({
-    required double lat,
-    required double lng,
-    double altitudeM = 10000,
-  }) => flyTo(lat: lat, lng: lng, altitude: altitudeM, range: altitudeM, tilt: 0);
-
-  /// Removes the QuickRig orbit KML, releasing the view back to the cluster's
-  /// default state.
-  Future<void> stopOrbit() async {
+    final lookAt = '<LookAt>'
+        '<latitude>$lat</latitude>'
+        '<longitude>$lng</longitude>'
+        '<range>$range</range>'
+        '<heading>$heading</heading>'
+        '<tilt>$tilt</tilt>'
+        '</LookAt>';
     await _commandService.execute(
-      'rm -f $_orbitFile 2>/dev/null; echo done',
+      'echo "flytoview=$lookAt" > /tmp/query.txt',
     );
   }
 
   // ---------------------------------------------------------------------------
-  // KML builders
+  // Orbit
   // ---------------------------------------------------------------------------
 
-  String _buildFlyToKml(
-    double lat,
-    double lng,
-    double altitude,
-    double range,
-    double tilt,
-    double heading,
-  ) =>
-      '''<?xml version="1.0" encoding="UTF-8"?>
-<kml xmlns="http://www.opengis.net/kml/2.2"
-     xmlns:gx="http://www.google.com/kml/ext/2.2">
-  <Document>
-    <gx:Tour>
-      <name>LGQuickRig FlyTo</name>
-      <gx:Playlist>
-        <gx:FlyTo>
-          <gx:duration>2</gx:duration>
-          <gx:flyToMode>smooth</gx:flyToMode>
-          <LookAt>
-            <longitude>$lng</longitude>
-            <latitude>$lat</latitude>
-            <altitude>$altitude</altitude>
-            <range>$range</range>
-            <tilt>$tilt</tilt>
-            <heading>$heading</heading>
-            <altitudeMode>relativeToGround</altitudeMode>
-          </LookAt>
-        </gx:FlyTo>
-      </gx:Playlist>
-    </gx:Tour>
-  </Document>
-</kml>''';
+  /// Starts a 360° orbit animation around [lat]/[lng] at [range] metres.
+  ///
+  /// Returns `false` if an orbit is already playing; `true` when started.
+  /// [onStop] is called when the animation finishes or is cancelled.
+  Future<bool> orbitPlay({
+    required double lat,
+    required double lng,
+    required double range,
+    double tilt = 45,
+    VoidCallback? onStop,
+  }) async {
+    if (_orbitPlaying) return false;
+    _orbitPlaying = true;
+
+    const int steps = 60;
+    const int stepDurationMs = 400;
+    int currentStep = 0;
+    bool isMoving = false;
+
+    _orbitTimer = Timer.periodic(
+      const Duration(milliseconds: stepDurationMs),
+      (timer) {
+        if (!_orbitPlaying || currentStep >= steps) {
+          timer.cancel();
+          _orbitPlaying = false;
+          onStop?.call();
+          return;
+        }
+        if (isMoving) return;
+        isMoving = true;
+
+        final double bearing = (currentStep * (360 / steps)) % 360;
+        final lookAt = '<gx:duration>0.3</gx:duration>'
+            '<gx:flyToMode>smooth</gx:flyToMode>'
+            '<LookAt>'
+            '<longitude>$lng</longitude>'
+            '<latitude>$lat</latitude>'
+            '<range>$range</range>'
+            '<tilt>$tilt</tilt>'
+            '<heading>$bearing</heading>'
+            '<gx:altitudeMode>relativeToGround</gx:altitudeMode>'
+            '</LookAt>';
+        _lastOrbitPosition = lookAt;
+
+        _commandService
+            .execute("echo 'flytoview=$lookAt' > /tmp/query.txt")
+            .whenComplete(() => isMoving = false);
+
+        currentStep++;
+      },
+    );
+    return true;
+  }
+
+  /// Cancels the orbit animation and holds the camera at the last position.
+  Future<void> orbitStop() async {
+    _orbitTimer?.cancel();
+    _orbitTimer = null;
+    _orbitPlaying = false;
+    if (_lastOrbitPosition != null) {
+      await _commandService.execute(
+        "echo 'flytoview=$_lastOrbitPosition' > /tmp/query.txt",
+      );
+    }
+  }
 }

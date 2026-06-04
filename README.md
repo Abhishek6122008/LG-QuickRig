@@ -212,7 +212,7 @@ lg_quickrig/
 │   ├── ⚙️ services/
 │   │   ├── lg_command_service.dart  ← execute · executeOnSlave · system cmds
 │   │   ├── lg_kml_controller.dart   ← sendKML · cleanKML · addKMLReference
-│   │   ├── lg_orbit_controller.dart ← flyTo · lookAt · stopOrbit
+│   │   ├── lg_orbit_controller.dart ← flyTo · orbitPlay · orbitStop
 │   │   └── lg_tour_controller.dart  ← startTour · stopTour · exitTour
 │   │
 │   ├── 🖼️ features/
@@ -273,17 +273,9 @@ LG master node reachable over LAN ✓   SSH port 22 open
 git clone https://github.com/your-org/lg-quickrig.git
 cd lg-quickrig
 flutter pub get
-```
 
-```bash
-# Android device / emulator
-flutter run
-
-# Linux desktop window
-flutter run -d linux
-
-# Specific device
-flutter run -d <device-id>
+flutter run            # Android device / emulator
+flutter run -d linux   # Linux desktop window
 ```
 
 ### First launch in 4 steps
@@ -313,20 +305,7 @@ flutter run -d <device-id>
 
 ### Retry & connect
 
-```dart
-// lib/core/ssh/ssh_client.dart
-
-await lgSSHClient.connect(
-  SSHCredentials(
-    host: '192.168.2.2', port: 22,
-    username: 'lg', password: 'yourpass',
-    nodeCount: 3,
-  ),
-  maxRetries: 3,
-  retryDelay: Duration(seconds: 2),
-  connectTimeout: Duration(seconds: 10),
-);
-```
+`LGSSHClient.connect()` retries up to `maxRetries` times before throwing `LGSSHException`. Auth failures short-circuit immediately — no point retrying a wrong password.
 
 ```
 Attempt 1 ──► network error        Attempt 1 ──► SSHAuthAbortError
@@ -339,22 +318,7 @@ Attempt 3 ──► timeout
 
 ### Remote-disconnect detection (zero polling)
 
-```dart
-void _watchForRemoteDisconnect() {
-  // Fires when the LG node closes the connection — e.g. after sudo reboot
-  _rawClient?.done.then(
-    (_) => _onRemoteClose(),
-    onError: (_) => _onRemoteClose(),
-  );
-}
-
-void _onRemoteClose() {
-  if (_state == SSHConnectionState.connected) {
-    _rawClient = null;
-    _setState(SSHConnectionState.disconnected); // badge turns 🔴 instantly
-  }
-}
-```
+When the LG node drops the connection — e.g. immediately after `sudo reboot` — `LGSSHClient` listens on the raw client's `done` future and transitions to `SSHConnectionState.disconnected` without any polling loop. The status badge turns red instantly.
 
 ### Execute a command
 
@@ -363,7 +327,7 @@ final output = await lgSSHClient.executeCommand(
   'df -h /',
   timeout: Duration(seconds: 30),
 );
-// Returns: stdout (+ "[stderr] ..." prefix if stderr is non-empty)
+// Returns: stdout (+ "[stderr] ..." prefix when stderr is non-empty)
 ```
 
 ---
@@ -372,81 +336,33 @@ final output = await lgSSHClient.executeCommand(
 
 ### Predefined commands (`LGCommandService`)
 
+`LGCommandService` wraps `LGSSHClient` with cluster-aware helpers: `executeOnSlave` SSH-hops from the master to each slave node, and the system commands handle the correct teardown order automatically.
+
 ```dart
-// Raw execution on master (LG1)
-await cmd.execute('echo hello from master');
-
-// Execute on a slave via ssh-from-master
-await cmd.executeOnSlave(2, 'df -h /');
-
-// Predefined cluster commands
-await cmd.reboot();           // slaves 3→2→1 then master; connection drops after
-await cmd.shutdown();         // same order; socket closes
+await cmd.reboot();           // slaves 3→2→1 then master; connection drops — expected
+await cmd.shutdown();         // same descending order
 await cmd.restartServices();  // pkill chrome + lg-relaunch on every node
-await cmd.sync();             // ~/scripts/lg-sync
-await cmd.blankScreens();     // write empty KML to each slave + clear kmls.txt
+await cmd.sync();             // ~/scripts/lg-sync on master
+await cmd.blankScreens();     // empty KML to each slave + clear kmls.txt
 ```
 
 ### KML management (`LGKMLController`)
 
-```dart
-await kml.sendKML(myKmlString, slave: 1);       // write to master's HTTP server
-await kml.sendSlaveKML(kml, 3);                 // target a specific display
-await kml.addKMLReference('http://lg1/kml/my_scene.kml');
-await kml.cleanKML();                           // remove all QuickRig files
-```
-
-<details>
-<summary>📄 Example KML — FlyTo Paris smoothly in 2 seconds</summary>
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<kml xmlns="http://www.opengis.net/kml/2.2"
-     xmlns:gx="http://www.google.com/kml/ext/2.2">
-  <Document>
-    <gx:Tour>
-      <name>LGQuickRig FlyTo</name>
-      <gx:Playlist>
-        <gx:FlyTo>
-          <gx:duration>2</gx:duration>
-          <gx:flyToMode>smooth</gx:flyToMode>
-          <LookAt>
-            <longitude>2.3522</longitude>
-            <latitude>48.8566</latitude>
-            <altitude>0</altitude>
-            <range>5000</range>
-            <tilt>60</tilt>
-            <heading>0</heading>
-            <altitudeMode>relativeToGround</altitudeMode>
-          </LookAt>
-        </gx:FlyTo>
-      </gx:Playlist>
-    </gx:Tour>
-  </Document>
-</kml>
-```
-
-</details>
+`LGKMLController` writes and removes KML files on the master's built-in HTTP server. The cluster browser stack polls `kmls.txt` for URLs to load. UI integration is planned for a later week.
 
 ### Orbit / FlyTo (`LGOrbitController`)
 
-```dart
-await orbit.flyTo(lat: 48.8566, lng: 2.3522, range: 5000, tilt: 60, heading: 45);
-await orbit.lookAt(lat: 27.1751, lng: 78.0421, altitudeM: 2000);
-await orbit.stopOrbit();
-```
+`LGOrbitController` sends `flytoview=<LookAt>` commands to `/tmp/query.txt`, the standard LG mechanism for live camera control. No NetworkLink setup required. UI integration is planned for a later week.
 
 ### Tour control (`LGTourController`)
 
-```dart
-await tour.startTour('World Heritage Sites');
-await tour.stopTour();
-await tour.exitTour();
-```
+`LGTourController` writes `gplaytour=NAME` to `~/gs_cmd`, which the `gsync` process on the master monitors to start and stop KML tours. UI integration is planned for a later week.
 
 ---
 
 ## Dependency Injection
+
+All services are registered as **lazy singletons** via GetIt. They are instantiated on first access and live for the app's entire lifetime — the SSH connection is never dropped and re-opened as screens are pushed and popped.
 
 ```mermaid
 graph LR
@@ -464,7 +380,6 @@ graph LR
 // Resolve anywhere — no BuildContext, no Provider
 final client = sl<LGSSHClient>();
 final cmd    = sl<LGCommandService>();
-final kml    = sl<LGKMLController>();
 ```
 
 > **Rule:** Controllers that receive a singleton via `sl<T>()` must **never** call `.dispose()` on it. The singleton's lifetime is the app's lifetime.
@@ -509,22 +424,7 @@ All 5 fields (`host`, `port`, `username`, `password`, `nodeCount`) go into the s
 └──────────────────────┘                             └─────────────────────────┘
 ```
 
-```kotlin
-// LGCommandChannel.kt
-MethodChannel(messenger, CHANNEL).setMethodCallHandler { call, result ->
-    when (call.method) {
-        "executeSSHCommand" -> {
-            val cmd = call.argument<String>("command") ?: ""
-            CoroutineScope(Dispatchers.IO).launch {
-                val output = sshExecute(cmd)
-                withContext(Dispatchers.Main) { result.success(output) }
-            }
-        }
-        "getConnectionStatus" -> result.success("unconfigured")
-        else -> result.notImplemented()
-    }
-}
-```
+The Kotlin `MethodChannel` handler and background engine wiring are planned for Week 2.
 
 ---
 
@@ -548,41 +448,6 @@ export DISPLAY=:0; pkill -9 chrome; sleep 2; ~/bin/lg-relaunch
 
 # Sync content master → all slaves
 ~/scripts/lg-sync
-```
-
-</details>
-
-<details>
-<summary>🗺️  KML management</summary>
-
-```bash
-# Blank all browser content cluster-wide
-echo "" > /var/www/html/kmls.txt
-
-# Blank a specific slave screen
-echo "" > /var/www/html/kml/slave_2.kml
-
-# Load a KML URL on the cluster
-echo 'http://lg1/kml/my_scene.kml' >> /var/www/html/kmls.txt
-
-# Remove QuickRig KML files
-rm -f /var/www/html/kml/lgquickrig_*.kml
-
-# Strip QuickRig references from kmls.txt
-sed -i '/lgquickrig/d' /var/www/html/kmls.txt
-```
-
-</details>
-
-<details>
-<summary>🎬  Tour control</summary>
-
-```bash
-# Start a named tour (name must match the gx:Tour name in the KML)
-echo 'gplaytour=My Tour Name' > /tmp/gs_cmd && mv /tmp/gs_cmd ~/gs_cmd
-
-# Stop the current tour
-echo 'gplaytour=' > /tmp/gs_cmd && mv /tmp/gs_cmd ~/gs_cmd
 ```
 
 </details>
@@ -618,10 +483,7 @@ git checkout -b feat/my-feature
 flutter analyze          # must report: No issues found
 flutter test             # must report: All tests passed
 
-# 3. For Kotlin changes
-cd android && ./gradlew lint
-
-# 4. Open a PR against main
+# 3. Open a PR against main
 ```
 
 ### Adding a new predefined command
@@ -644,19 +506,7 @@ cd android && ./gradlew lint
 
 ### Adding a new service
 
-```dart
-// lib/services/lg_your_service.dart
-class LGYourService {
-  final LGCommandService _cmd;
-  LGYourService(this._cmd);
-  // never import LGSSHClient directly — always go through LGCommandService
-}
-
-// lib/core/di/service_locator.dart
-sl.registerLazySingleton<LGYourService>(
-  () => LGYourService(sl<LGCommandService>()),
-);
-```
+New services should receive `LGCommandService` as a constructor parameter — never import `LGSSHClient` directly. Register the service as a lazy singleton in `lib/core/di/service_locator.dart` following the existing pattern.
 
 ---
 
