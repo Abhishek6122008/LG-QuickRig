@@ -8,6 +8,7 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
+        <!-- ── Main Flutter activity ─────────────────────────────────────── -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -26,34 +27,42 @@
             </intent-filter>
         </activity>
 
+        <!-- ── Command Bar home screen widget (4×1) ──────────────────────── -->
         <!--
-            HOME SCREEN WIDGET — uncomment and fill in when you build the widget.
-
-            <receiver
-                android:name=".lg.LGHomeWidgetProvider"
-                android:exported="true">
-                <intent-filter>
-                    <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                </intent-filter>
-                <meta-data
-                    android:name="android.appwidget.provider"
-                    android:resource="@xml/lg_home_widget_info" />
-            </receiver>
+            android:exported="true" is required on API 31+ for receivers that
+            handle implicit broadcasts (APPWIDGET_UPDATE comes from the system).
         -->
+        <receiver
+            android:name=".lg.LGHomeWidgetProvider"
+            android:exported="true"
+            android:label="LG QuickRig">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <!-- Custom button actions routed back to this receiver -->
+                <action android:name="com.example.widgets_app.ACTION_REBOOT" />
+                <action android:name="com.example.widgets_app.ACTION_SYNC" />
+                <action android:name="com.example.widgets_app.ACTION_SHUTDOWN" />
+                <action android:name="com.example.widgets_app.ACTION_BLANK" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/lg_home_widget_info" />
+        </receiver>
 
+        <!-- ── Quick Settings tile (API 24+ / Android 7+) ────────────────── -->
         <!--
-            QUICK SETTINGS TILE — uncomment when you build the tile.
-
-            <service
-                android:name=".lg.LGQuickSettingsTile"
-                android:exported="true"
-                android:label="LG QuickRig"
-                android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
-                <intent-filter>
-                    <action android:name="android.service.quicksettings.action.QS_TILE" />
-                </intent-filter>
-            </service>
+            BIND_QUICK_SETTINGS_TILE restricts binding to the System UI process —
+            no third-party app can impersonate the tile.
         -->
+        <service
+            android:name=".lg.LGQuickSettingsTile"
+            android:exported="true"
+            android:label="@string/qs_tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
 
         <meta-data
             android:name="flutterEmbedding"
@@ -71,4 +80,5 @@
             <data android:mimeType="text/plain" />
         </intent>
     </queries>
+
 </manifest>

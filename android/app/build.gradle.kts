@@ -43,3 +43,15 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // Pure-Java SSH2 client — used by LGSshExecutor for widget/tile operations.
+    implementation("com.jcraft:jsch:0.1.55")
+
+    // Kotlin coroutines for background SSH work in BroadcastReceiver / TileService.
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+    // EncryptedSharedPreferences — same library flutter_secure_storage uses under
+    // the hood, so Kotlin can open the same encrypted store and read credentials.
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+}

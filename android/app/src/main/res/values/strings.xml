@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LG QuickRig</string>
+    <string name="widget_description">One-tap Reboot, Sync, Shutdown, and Blank Screens for your Liquid Galaxy cluster.</string>
+    <string name="qs_tile_label">LG QuickRig</string>
+</resources>

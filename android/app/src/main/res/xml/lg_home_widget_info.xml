@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    AppWidgetProviderInfo for the LG QuickRig home screen widget.
+    AppWidgetProviderInfo — LG QuickRig Command Bar (4×1)
 
-    Uncomment the <receiver> block in AndroidManifest.xml and implement
-    LGHomeWidgetProvider.kt when you're ready to build this widget.
+    Cell size formula (Google guideline): cells = (dp + 2) / 74
+    300dp wide  → ~4 cells    48dp tall → ~1 cell
 
-    Key attributes to configure:
-      minWidth / minHeight  — smallest size the user can resize to
-      updatePeriodMillis    — system-scheduled refresh rate (min 30 min)
-      previewImage          — shown in the widget picker
-      widgetCategory        — home_screen | keyguard | searchbox
+    updatePeriodMillis = 0 because the widget is stateless — it fires commands
+    on tap and does not need a scheduled background refresh.
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="110dp"
-    android:minHeight="40dp"
+    android:minWidth="300dp"
+    android:minHeight="48dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="1"
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/lg_home_widget"
-    android:resizeMode="horizontal|vertical"
-    android:widgetCategory="home_screen" />
+    android:resizeMode="horizontal"
+    android:widgetCategory="home_screen"
+    android:description="@string/widget_description" />

@@ -65,15 +65,16 @@ class LGCommandService {
   /// serves KML/HTTP — is last. The SSH connection will drop immediately after
   /// the master reboot command is sent; this is expected and not re-thrown.
   Future<void> reboot() async {
+    final safePass = _sudoPass();
     for (int i = nodeCount; i >= 2; i--) {
       try {
-        await executeOnSlave(i, 'sudo reboot');
+        await executeOnSlave(i, "echo '$safePass' | sudo -S reboot");
       } on LGSSHException {
         // Slave drops the connection as soon as it starts rebooting — normal.
       }
     }
     try {
-      await execute('sudo reboot');
+      await execute("echo '$safePass' | sudo -S reboot");
     } on LGSSHException {
       // Master drops the connection immediately — expected.
     }
@@ -81,15 +82,16 @@ class LGCommandService {
 
   /// Shuts down every node in the cluster.
   Future<void> shutdown() async {
+    final safePass = _sudoPass();
     for (int i = nodeCount; i >= 2; i--) {
       try {
-        await executeOnSlave(i, 'sudo shutdown -h now');
+        await executeOnSlave(i, "echo '$safePass' | sudo -S shutdown -h now");
       } on LGSSHException {
         // Same pattern as reboot — connection drops after the command.
       }
     }
     try {
-      await execute('sudo shutdown -h now');
+      await execute("echo '$safePass' | sudo -S shutdown -h now");
     } on LGSSHException {
       // Expected — master shuts down before SSH can send a clean response.
     }
@@ -138,6 +140,16 @@ class LGCommandService {
       }
     }
     await execute('echo "" > /var/www/html/kmls.txt');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Internal helpers
+  // ---------------------------------------------------------------------------
+
+  /// Returns the SSH password, single-quote-escaped for use in shell strings.
+  String _sudoPass() {
+    final pass = _client.credentials?.password ?? 'lg';
+    return pass.replaceAll("'", r"'\''");
   }
 
   // ---------------------------------------------------------------------------
