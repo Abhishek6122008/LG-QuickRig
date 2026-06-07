@@ -1,9 +1,9 @@
-package com.example.widgets_app
+package com.liqtech.lg_quickrig
 
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 
-import com.example.widgets_app.lg.LGCommandChannel
+import com.liqtech.lg_quickrig.lg.LGCommandChannel
 
 /**
  * Entry point for the Flutter Android host.

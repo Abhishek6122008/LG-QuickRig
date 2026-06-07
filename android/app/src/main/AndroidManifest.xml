@@ -39,14 +39,28 @@
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <!-- Custom button actions routed back to this receiver -->
-                <action android:name="com.example.widgets_app.ACTION_REBOOT" />
-                <action android:name="com.example.widgets_app.ACTION_SYNC" />
-                <action android:name="com.example.widgets_app.ACTION_SHUTDOWN" />
-                <action android:name="com.example.widgets_app.ACTION_BLANK" />
+                <action android:name="com.liqtech.lg_quickrig.ACTION_REBOOT" />
+                <action android:name="com.liqtech.lg_quickrig.ACTION_SYNC" />
+                <action android:name="com.liqtech.lg_quickrig.ACTION_SHUTDOWN" />
+                <action android:name="com.liqtech.lg_quickrig.ACTION_BLANK" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/lg_home_widget_info" />
+        </receiver>
+
+        <!-- ── Live Status widget (2x2) ─────────────────────────────────── -->
+        <receiver
+            android:name=".lg.LGStatusWidgetProvider"
+            android:exported="true"
+            android:label="LG Status">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.liqtech.lg_quickrig.ACTION_STATUS_REFRESH" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/lg_status_widget_info" />
         </receiver>
 
         <!-- ── Quick Settings tile (API 24+ / Android 7+) ────────────────── -->

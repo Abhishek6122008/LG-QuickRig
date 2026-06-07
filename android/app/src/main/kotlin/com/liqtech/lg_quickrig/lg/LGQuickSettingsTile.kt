@@ -1,4 +1,4 @@
-package com.example.widgets_app.lg
+package com.liqtech.lg_quickrig.lg
 
 import android.annotation.SuppressLint
 import android.os.Build

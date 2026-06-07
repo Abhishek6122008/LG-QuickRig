@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.widgets_app"
+    namespace = "com.liqtech.lg_quickrig"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.widgets_app"
+        applicationId = "com.liqtech.lg_quickrig"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         // flutter_secure_storage requires API 23+ (Android Keystore / EncryptedSharedPreferences).

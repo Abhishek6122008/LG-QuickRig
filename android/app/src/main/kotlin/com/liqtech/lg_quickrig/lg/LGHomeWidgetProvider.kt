@@ -1,4 +1,4 @@
-package com.example.widgets_app.lg
+package com.liqtech.lg_quickrig.lg
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -8,7 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.widget.RemoteViews
-import com.example.widgets_app.R
+import com.liqtech.lg_quickrig.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -37,10 +37,10 @@ class LGHomeWidgetProvider : AppWidgetProvider() {
     companion object {
         // Custom action strings — sent as Intent extras from each button's PendingIntent.
         // requestCode must be unique per action so the OS doesn't collapse the intents.
-        const val ACTION_REBOOT   = "com.example.widgets_app.ACTION_REBOOT"
-        const val ACTION_SYNC     = "com.example.widgets_app.ACTION_SYNC"
-        const val ACTION_SHUTDOWN = "com.example.widgets_app.ACTION_SHUTDOWN"
-        const val ACTION_BLANK    = "com.example.widgets_app.ACTION_BLANK"
+        const val ACTION_REBOOT   = "com.liqtech.lg_quickrig.ACTION_REBOOT"
+        const val ACTION_SYNC     = "com.liqtech.lg_quickrig.ACTION_SYNC"
+        const val ACTION_SHUTDOWN = "com.liqtech.lg_quickrig.ACTION_SHUTDOWN"
+        const val ACTION_BLANK    = "com.liqtech.lg_quickrig.ACTION_BLANK"
 
         private const val RC_REBOOT   = 10
         private const val RC_SYNC     = 11

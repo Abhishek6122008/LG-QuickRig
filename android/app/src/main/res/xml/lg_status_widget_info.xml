@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    AppWidgetProviderInfo — LG QuickRig Live Status (2x2)
+
+    Cell size formula (Google guideline): cells = (dp + 2) / 74
+    148dp wide (~2 cells) x 148dp tall (~2 cells)
+
+    updatePeriodMillis = 1800000 (30 min) — OS-enforced minimum for periodic
+    background updates. More frequent refreshes are driven by AlarmManager inside
+    LGStatusWidgetProvider and fire without waking a sleeping device.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="148dp"
+    android:minHeight="148dp"
+    android:targetCellWidth="2"
+    android:targetCellHeight="2"
+    android:updatePeriodMillis="1800000"
+    android:initialLayout="@layout/lg_status_widget"
+    android:resizeMode="none"
+    android:widgetCategory="home_screen"
+    android:description="@string/status_widget_description" />

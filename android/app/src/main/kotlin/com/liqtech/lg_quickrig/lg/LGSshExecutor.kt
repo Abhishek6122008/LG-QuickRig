@@ -1,4 +1,4 @@
-package com.example.widgets_app.lg
+package com.liqtech.lg_quickrig.lg
 
 import com.jcraft.jsch.ChannelExec
 import com.jcraft.jsch.JSch

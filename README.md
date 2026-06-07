@@ -32,10 +32,10 @@
 
 <table>
 <tr>
-<td align="center"><b>2 / 8</b><br/><sub>Weeks done</sub></td>
+<td align="center"><b>3 / 8</b><br/><sub>Weeks done</sub></td>
 <td align="center"><b>4</b><br/><sub>Flutter screens</sub></td>
-<td align="center"><b>5</b><br/><sub>Kotlin files</sub></td>
-<td align="center"><b>2</b><br/><sub>Android surfaces</sub></td>
+<td align="center"><b>6</b><br/><sub>Kotlin files</sub></td>
+<td align="center"><b>3</b><br/><sub>Android surfaces</sub></td>
 <td align="center"><b>0</b><br/><sub>Plaintext secrets</sub></td>
 </tr>
 </table>
@@ -52,10 +52,11 @@
 
 **LG QuickRig** removes that entirely.
 
-- **One tap from your home screen** — a 4×1 Android widget puts Reboot, Sync, Shutdown, and Blank Screens on your launcher, no app open required
+- **One tap from your home screen** — a 4x1 Android widget puts Reboot, Sync, Shutdown, and Blank Screens on your launcher, no app open required
+- **Live Status widget** — a 2x2 widget shows real-time connection state with a colour-coded dot, auto-refreshed every 5 minutes
 - **Quick Settings tile** — toggle connectivity straight from the system shade, with a live SSH ping confirming reachability
 - **Full companion app** — Dashboard, LG Commands panel, SSH Console, and Settings, all wired to a shared SSH session that persists across screens
-- **Coming:** AI voice commands, Gemini-powered log monitoring, anomaly detection, and a Linux desktop build
+- **Coming:** AI voice commands, Gemini-powered log monitoring, and a Linux desktop build
 
 > The goal is a zero-friction rig operator's tool. If it takes more than one tap, it's too many.
 
@@ -63,7 +64,7 @@
 
 ---
 
-## 🎤 Presentation — June 17
+## Presentation — June 17
 
 > Talking points for the first project meeting. Seven topics you can go deep on or keep surface-level depending on the audience.
 
@@ -156,7 +157,7 @@ There are two ways to move the Liquid Galaxy camera programmatically:
 
 `LGOrbitController` uses `query.txt`. It's the correct mechanism — it's what Google's original LG setup uses — but a lot of third-party apps use the NetworkLink approach because it's more documented. The `query.txt` approach works on a stock LG installation with zero configuration.
 
-The 360° orbit is a `Timer.periodic` loop running every 400ms, incrementing the heading by 6° per step (60 steps × 6° = 360°), firing a new `flytoview` command each tick. The result is a smooth orbit around a geographic point.
+The 360° orbit is a `Timer.periodic` loop running every 400ms, incrementing the heading by 6° per step (60 steps x 6° = 360°), firing a new `flytoview` command each tick. The result is a smooth orbit around a geographic point.
 
 **One line version:** *"The camera orbit writes 60 SSH commands over 24 seconds — one every 400ms — and the LG picks them up natively via a file it already watches."*
 
@@ -173,7 +174,7 @@ Three choices that come up in Flutter architecture discussions:
 GetIt is a service locator, not a state management solution. It holds the SSH client singleton and resolves it anywhere without needing a `BuildContext`. Provider and Riverpod are excellent for widget state — they're overkill for "I need the same SSH connection in every screen." GetIt solves the exact right problem here.
 
 **ChangeNotifier over Bloc/Riverpod**
-The controllers (`DashboardController`, `LGCommandsController`) extend `ChangeNotifier` and are wrapped with `ListenableBuilder` in the UI. No generated code, no separate events/states, no boilerplate. For an app with simple state (connected/busy/error), the overhead of Bloc or Riverpod isn't justified. If the app grows to Week 6–7 complexity with async log streams and voice input, that call gets revisited.
+The controllers (`DashboardController`, `LGCommandsController`) extend `ChangeNotifier` and are wrapped with `ListenableBuilder` in the UI. No generated code, no separate events/states, no boilerplate. For an app with simple state (connected/busy/error), the overhead of Bloc or Riverpod isn't justified. If the app grows to Week 6-7 complexity with async log streams and voice input, that call gets revisited.
 
 **Layered service architecture**
 `LGSSHClient` → `LGCommandService` → `LGKMLController / LGOrbitController` is a strict one-way dependency chain. Nothing at a higher layer imports something at a lower layer out of order. This means you can swap `LGSSHClient` (e.g., replace `dartssh2` with something else) without touching any controller.
@@ -183,23 +184,22 @@ The controllers (`DashboardController`, `LGCommandsController`) extend `ChangeNo
 </details>
 
 <details>
-<summary><b>7 · Where it goes from here — Weeks 3–8</b></summary>
+<summary><b>7 · Where it goes from here — Weeks 4–8</b></summary>
 
 <br/>
 
-The foundation (Weeks 1–2) is complete: SSH works, widgets work, credentials are secure, the architecture is clean. The remaining six weeks build on top:
+The foundation (Weeks 1–3) is complete: SSH works, all three Android surfaces work, credentials are secure, the architecture is clean. The remaining five weeks build on top:
 
 | Milestone | What it unlocks |
 |:---|:---|
-| **Week 3** — Live Status widget (2×2) | Real-time connection state on the home screen without opening the app |
 | **Week 4** — Linux desktop build | The same Flutter codebase compiles to a native Linux window for use on the LG operator machine |
 | **Week 5** — Gemini voice commands | Speak to the rig: *"fly to the Eiffel Tower"* → SSH command sent |
 | **Week 6** — Log monitoring | Gemini reads the LG system logs over SSH and flags anomalies before they become incidents |
 | **Weeks 7–8** — Polish + submission | Tests, docs, demo video |
 
-The AI weeks are the project's headline feature. Everything built in Weeks 1–2 is infrastructure that makes those weeks possible without scrambling.
+The AI weeks are the project's headline feature. Everything built in Weeks 1–3 is infrastructure that makes those weeks possible without scrambling.
 
-**One line version:** *"Weeks 1 and 2 are the foundation. Weeks 5 and 6 are why the project is interesting."*
+**One line version:** *"Weeks 1–3 are the foundation. Weeks 5 and 6 are why the project is interesting."*
 
 </details>
 
@@ -217,7 +217,7 @@ The AI weeks are the project's headline feature. Everything built in Weeks 1–2
 
 ```
 ╔═══════════════════════════════════════════╗   ╔═══════════════════════════════════════════╗
-║  LG QuickRig          ● Connected         ║   ║  LG Commands             ● Connected      ║
+║  LG QuickRig          Connected           ║   ║  LG Commands             Connected        ║
 ╠═══════════════════════════════════════════╣   ╠═══════════════════════════════════════════╣
 ║                                           ║   ║  ┌─────────────────────────────────────┐  ║
 ║  ┌─────────────────────────────────────┐  ║   ║  │    Connected — ready to send cmds   │  ║
@@ -236,9 +236,9 @@ The AI weeks are the project's headline feature. Everything built in Weeks 1–2
 ║  └───────────────┘  └───────────────────┘ ║   ║                                           ║
 ║  ┌───────────────┐  ┌───────────────────┐ ║   ║  Output                         [Clear]   ║
 ║  │   Blank Scrn  │  │     Clean KML     │ ║   ║  ┌─────────────────────────────────────┐  ║
-║  └───────────────┘  └───────────────────┘ ║   ║  │ 14:32:01 [OUT] Running: Sync…       │  ║
+║  └───────────────┘  └───────────────────┘ ║   ║  │ 14:32:01 [OUT] Running: Sync...     │  ║
 ║  ┌───────────────┐  ┌───────────────────┐ ║   ║  │ 14:32:02 [OUT] Sync completed.      │  ║
-║  │     LG Cmds   │  │  >_  SSH Console  │ ║   ║  └─────────────────────────────────────┘  ║
+║  │     LG Cmds   │  │  SSH Console      │ ║   ║  └─────────────────────────────────────┘  ║
 ║  └───────────────┘  └───────────────────┘ ║   ╚═══════════════════════════════════════════╝
 ╚═══════════════════════════════════════════╝
 ```
@@ -253,8 +253,21 @@ The AI weeks are the project's headline feature. Everything built in Weeks 1–2
 ║  │  │  Reboot  │ │   Sync   │ │  Shutdn  │ │ Blank │ │   ║
 ║  │  └──────────┘ └──────────┘ └──────────┘ └───────┘ │   ║
 ║  └───────────────────────────────────────────────────┘   ║
-║         Command Bar widget  (4×1)                        ║
+║         Command Bar widget  (4x1)                        ║
 ╚══════════════════════════════════════════════════════════╝
+```
+
+```
+╔══════════════════════╗
+║  LG QuickRig         ║
+║                      ║
+║       ( green )      ║
+║      Connected       ║
+║   192.168.2.2        ║
+║   Updated 14:32      ║
+║                      ║
+║  Live Status  (2x2)  ║
+╚══════════════════════╝
 ```
 
 <br/>
@@ -265,7 +278,7 @@ The AI weeks are the project's headline feature. Everything built in Weeks 1–2
 
 <div align="center">
 
-`Progress ████████████░░░░░░░░░░░░░░░░░░  2 of 8 weeks`
+`Progress ████████████░░░░░░░░░░░░░░░░░░  3 of 8 weeks`
 
 </div>
 
@@ -274,124 +287,13 @@ The AI weeks are the project's headline feature. Everything built in Weeks 1–2
 | | Week | Focus | Shipped |
 |:---:|:---:|:---|:---|
 | ✅ | **1** | **SSH Foundation** | `LGSSHClient` · `LGCommandService` · secure credential storage · Dashboard · LG Commands · SSH Console |
-| ✅ | **2** | **Android Widgets + Platform Channels** | `LGCommandChannel.kt` · `LGCredentialStore.kt` · `LGSshExecutor.kt` (JSch) · Command Bar widget (4×1) · Quick Settings tile |
-| 🔜 | **3** | **Live Status Widget + Background Service** | Live Status widget (2×2) · `LGWidgetService` background Flutter engine · real-time SSH state |
+| ✅ | **2** | **Android Widgets + Platform Channels** | `LGCommandChannel.kt` · `LGCredentialStore.kt` · `LGSshExecutor.kt` (JSch) · Command Bar widget (4x1) · Quick Settings tile |
+| ✅ | **3** | **Live Status Widget** | `LGStatusWidgetProvider.kt` · 2x2 status widget · green/red ping indicator · AlarmManager 5-min auto-refresh |
 | 🔜 | **4** | **Linux Desktop Build** | `linux/` runner · desktop UI polish · Debian/Ubuntu packaging |
 | 🔜 | **5** | **AI Voice Commands** | Speech-to-SSH pipeline · Gemini API wiring · natural-language cluster control |
-| 🔜 | **6** | **Log Monitoring + Anomaly Detection** | Gemini-powered SSH log analysis · anomaly alerts · adaptive widget layout |
-| 🔜 | **7** | **Testing + Polish** | Unit · integration · widget tests · UI refinements · edge-case hardening |
+| 🔜 | **6** | **Log Monitoring + Anomaly Detection** | Gemini-powered SSH log analysis · anomaly alerts |
+| 🔜 | **7** | **Testing + Polish** | Unit · integration · widget tests · UI refinements |
 | 🔜 | **8** | **Docs + Submission** | Final docs · demo video · submission-ready release |
-
-<br/>
-
----
-
-## Architecture
-
-Two SSH paths coexist by design — the Flutter engine owns the live session for the app UI, while Kotlin handles widget and tile operations independently using JSch so they work even when the app isn't running.
-
-```mermaid
-flowchart TD
-    subgraph UI["🖼️  UI Layer"]
-        DS[DashboardScreen]
-        LGC[LGCommandsScreen]
-        SS[SSHTestScreen]
-        SET[SettingsScreen]
-    end
-
-    subgraph CTRL["🎮  Controllers  ·  ChangeNotifier"]
-        DC[DashboardController]
-        LGCC[LGCommandsController]
-        SC[SSHTestController]
-    end
-
-    subgraph SVC["⚙️  Service Layer  ·  GetIt Singletons"]
-        CMD[LGCommandService]
-        KML[LGKMLController]
-        ORB[LGOrbitController]
-        TOUR[LGTourController]
-    end
-
-    subgraph CORE["🔩  Core"]
-        CLIENT[LGSSHClient\ndartssh2]
-        REPO[CredentialsRepository\nflutter_secure_storage]
-    end
-
-    subgraph ANDROID["📱  Android Native  ·  Kotlin"]
-        CHAN[LGCommandChannel\nMethodChannel bridge]
-        CREDS[LGCredentialStore\nEncryptedSharedPreferences]
-        EXEC[LGSshExecutor\nJSch]
-        WP[LGHomeWidgetProvider\nAppWidgetProvider]
-        QS[LGQuickSettingsTile\nTileService]
-    end
-
-    DS --> DC
-    LGC --> LGCC
-    SS --> SC
-    DC --> CMD
-    DC --> KML
-    LGCC --> CMD
-    SC --> CLIENT
-    CMD --> CLIENT
-    KML --> CMD
-    ORB --> CMD
-    TOUR --> CMD
-    DC --> REPO
-    SET --> REPO
-
-    CHAN --> EXEC
-    WP --> CREDS
-    WP --> EXEC
-    QS --> CREDS
-    QS --> EXEC
-
-    CLIENT <-->|TCP / SSH| LG[🖥️  LG Master Node\nlg@192.168.2.2:22]
-    EXEC <-->|TCP / SSH| LG
-    REPO <-->|AES-256-GCM| KS[🔐  Platform Keystore]
-    CREDS <-->|AES-256-GCM| KS
-
-    style UI fill:#00B4D820,stroke:#00B4D8
-    style CTRL fill:#90E0EF20,stroke:#90E0EF
-    style SVC fill:#0077B620,stroke:#0077B6
-    style CORE fill:#03045E20,stroke:#03045E
-    style ANDROID fill:#7F52FF20,stroke:#7F52FF
-```
-
-<br/>
-
----
-
-## First-launch Flow
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User
-    participant App as LGQuickRigApp
-    participant DI as ServiceLocator
-    participant Repo as CredentialsRepository
-    participant SSH as LGSSHClient
-    participant LG as LG Master Node
-
-    User->>App: Launch
-    App->>DI: ServiceLocator.setup()
-    DI-->>App: all singletons registered (lazy)
-    App->>App: render DashboardScreen
-    App->>Repo: load() — auto-connect attempt
-    Repo-->>App: null (first launch, nothing saved)
-    App-->>User: Dashboard · Disconnected state
-
-    User->>App: tap ⚙  →  Settings
-    User->>App: fill host · port · user · password · nodes
-    User->>App: tap Save & Connect
-    App->>Repo: save(SSHCredentials)
-    Repo-->>App: written to Keystore ✅
-    App->>SSH: connect(creds)
-    SSH->>LG: TCP handshake → SSH auth
-    LG-->>SSH: authenticated ✅
-    SSH-->>App: SSHConnectionState.connected
-    App-->>User: Dashboard · Connected · actions enabled 🟢
-```
 
 <br/>
 
@@ -402,62 +304,71 @@ sequenceDiagram
 ```
 lg_quickrig/
 │
-├── 📱 android/app/src/main/
-│   ├── AndroidManifest.xml          ← INTERNET · widget receiver · QS tile service
-│   ├── kotlin/…/
-│   │   ├── MainActivity.kt          ← wires LGCommandChannel on engine start
+├── android/app/src/main/
+│   ├── AndroidManifest.xml             ← INTERNET · widget receivers · QS tile service
+│   ├── kotlin/com/liqtech/lg_quickrig/
+│   │   ├── MainActivity.kt             ← wires LGCommandChannel on engine start
 │   │   └── lg/
-│   │       ├── LGCommandChannel.kt     ← MethodChannel: Dart ↔ Kotlin bridge
+│   │       ├── LGCommandChannel.kt     ← MethodChannel bridge: Dart <-> Kotlin
 │   │       ├── LGCredentialStore.kt    ← reads EncryptedSharedPreferences (same store as Dart)
 │   │       ├── LGSshExecutor.kt        ← JSch SSH client for widget/tile use
-│   │       ├── LGHomeWidgetProvider.kt ← AppWidgetProvider — 4 buttons, PendingIntent routing
-│   │       └── LGQuickSettingsTile.kt  ← TileService — ping-based connect/disconnect toggle
+│   │       ├── LGHomeWidgetProvider.kt ← Command Bar widget: 4 buttons, PendingIntent routing
+│   │       ├── LGQuickSettingsTile.kt  ← TileService: ping-based connect/disconnect toggle
+│   │       └── LGStatusWidgetProvider.kt ← Live Status widget: ping, colour dot, AlarmManager refresh
 │   └── res/
-│       ├── xml/lg_home_widget_info.xml   ← AppWidgetProviderInfo (4×1, 300dp)
-│       ├── layout/lg_home_widget.xml     ← Command Bar: Reboot · Sync · Shutdown · Blank
-│       └── values/strings.xml            ← app_name, widget_description, qs_tile_label
+│       ├── xml/
+│       │   ├── lg_home_widget_info.xml    ← AppWidgetProviderInfo (4x1, 300dp)
+│       │   └── lg_status_widget_info.xml  ← AppWidgetProviderInfo (2x2, 148dp)
+│       ├── layout/
+│       │   ├── lg_home_widget.xml         ← Command Bar: Reboot · Sync · Shutdown · Blank
+│       │   └── lg_status_widget.xml       ← Live Status: dot · label · host · timestamp
+│       ├── drawable/
+│       │   ├── status_circle_online.xml   ← green oval
+│       │   ├── status_circle_offline.xml  ← red oval
+│       │   └── status_circle_pending.xml  ← grey oval
+│       └── values/strings.xml
 │
-├── 🐧 linux/                        ← Linux desktop runner (Week 4)
+├── linux/                              ← Linux desktop runner (Week 4)
 │
-├── 📦 lib/
-│   ├── main.dart                    ← async init · WidgetsFlutterBinding · DI setup
-│   ├── app.dart                     ← MaterialApp · dark teal theme · home=Dashboard
+├── lib/
+│   ├── main.dart                       ← async init · DI setup
+│   ├── app.dart                        ← MaterialApp · dark teal theme
 │   │
-│   ├── 🔩 core/
-│   │   ├── constants.dart           ← LGDefaults (host, port, timeouts, retries)
-│   │   ├── di/service_locator.dart  ← GetIt wiring — single source of truth for all services
+│   ├── core/
+│   │   ├── constants.dart
+│   │   ├── di/service_locator.dart     ← GetIt wiring
 │   │   └── ssh/
-│   │       ├── ssh_client.dart      ← LGSSHClient — transport, retry, state stream
-│   │       ├── ssh_credentials.dart ← value object: host / port / user / pass / nodeCount
-│   │       └── ssh_exception.dart   ← LGSSHException
+│   │       ├── ssh_client.dart         ← LGSSHClient — transport, retry, state stream
+│   │       ├── ssh_credentials.dart
+│   │       └── ssh_exception.dart
 │   │
-│   ├── 💾 data/repositories/
-│   │   └── credentials_repository.dart  ← flutter_secure_storage CRUD
+│   ├── data/repositories/
+│   │   └── credentials_repository.dart ← flutter_secure_storage CRUD
 │   │
-│   ├── ⚙️  services/
-│   │   ├── lg_command_service.dart  ← execute · executeOnSlave · system commands
-│   │   ├── lg_kml_controller.dart   ← sendKML · cleanKML · addKMLReference
-│   │   ├── lg_orbit_controller.dart ← flyTo · orbitPlay · orbitStop
-│   │   └── lg_tour_controller.dart  ← startTour · stopTour · exitTour
+│   ├── services/
+│   │   ├── lg_command_service.dart     ← execute · executeOnSlave · system commands
+│   │   ├── lg_kml_controller.dart
+│   │   ├── lg_orbit_controller.dart    ← flyTo · orbitPlay · orbitStop
+│   │   └── lg_tour_controller.dart
 │   │
-│   ├── 🖼️  features/
+│   ├── features/
 │   │   ├── dashboard/
-│   │   │   ├── dashboard_controller.dart  ← auto-connect · quick-action dispatch
-│   │   │   └── dashboard_screen.dart      ← connection card + 8-tile action grid
+│   │   │   ├── dashboard_controller.dart
+│   │   │   └── dashboard_screen.dart
 │   │   ├── lg_commands/
-│   │   │   ├── lg_commands_controller.dart ← command dispatch + nav + orbit + output log
-│   │   │   └── lg_commands_screen.dart     ← buttons · nav pad · camera panel · log
+│   │   │   ├── lg_commands_controller.dart
+│   │   │   └── lg_commands_screen.dart
 │   │   ├── ssh_test/
-│   │   │   ├── ssh_test_controller.dart   ← log management · DI-aware
-│   │   │   └── ssh_test_screen.dart       ← raw SSH console · timestamped output
+│   │   │   ├── ssh_test_controller.dart
+│   │   │   └── ssh_test_screen.dart
 │   │   └── settings/
-│   │       └── settings_screen.dart       ← self-loading form · secure persistence
+│   │       └── settings_screen.dart
 │   │
-│   └── 🧩 shared/widgets/
-│       └── connection_status_badge.dart   ← coloured pill: Disconnected / Connecting / Connected
+│   └── shared/widgets/
+│       └── connection_status_badge.dart
 │
-└── 🧪 test/
-    └── widget_test.dart             ← smoke: Dashboard renders disconnected on launch
+└── test/
+    └── widget_test.dart
 ```
 
 <br/>
@@ -491,9 +402,9 @@ lg_quickrig/
 ### Prerequisites
 
 ```
-Flutter ≥ 3.16     flutter pub get    ✓
-Android SDK API 23+                   ✓   minSdk enforced in build.gradle.kts
-LG master node reachable over LAN     ✓   SSH port 22 open, sudo -S supported
+Flutter >= 3.16     flutter pub get    ✓
+Android SDK API 23+                    ✓   minSdk enforced in build.gradle.kts
+LG master node reachable over LAN      ✓   SSH port 22 open, sudo -S supported
 ```
 
 ### Install & run
@@ -507,234 +418,26 @@ flutter run            # Android device / emulator
 flutter run -d linux   # Linux desktop window
 ```
 
-### First launch in 4 steps
+### First launch
 
 ```
-  ① Open the app
-     └─► Dashboard shows Disconnected (no credentials saved yet)
-             │
-  ② Tap ⚙  Settings
-     └─► Form opens, pre-filled with defaults
-             │
-  ③ Enter your LG details
-     └─► Host: 192.168.2.2   Port: 22
-         Username: lg          Password: ••••••
-         Node count: 3
-             │
-  ④ Tap "Save & Connect"
-     └─► Credentials → Keystore ✓
-         SSH handshake → authenticated ✓
-         Status badge → 🟢  Quick Actions → enabled
+  1. Open the app
+        Dashboard shows Disconnected (no credentials saved yet)
+
+  2. Tap Settings
+        Enter host, port, username, password, node count
+
+  3. Tap Save & Connect
+        Credentials → Keystore
+        SSH handshake → authenticated
+        Status badge → Connected, actions enabled
 ```
 
-**To add the home screen widget:** long-press your launcher → Widgets → LG QuickRig → drag a 4×1 slot.
+**To add the Command Bar widget:** long-press launcher → Widgets → LG QuickRig → drag a 4x1 slot.
+
+**To add the Live Status widget:** same picker → drag a 2x2 slot.
 
 **To add the Quick Settings tile:** pull down the shade → edit tiles → add *LG QuickRig*.
-
-<br/>
-
----
-
-## SSH Module
-
-### Retry & reconnect
-
-`LGSSHClient.connect()` retries up to `maxRetries` times with a configurable delay. Wrong-password errors are detected as `SSHAuthAbortError` and fail immediately — no point waiting through retries for a credential problem.
-
-```
-Attempt 1 ──► network error        Attempt 1 ──► SSHAuthAbortError
-   ⏱ 2 s                              │
-Attempt 2 ──► network error           └── LGSSHException thrown immediately
-   ⏱ 2 s                                  (wrong password — no retries)
-Attempt 3 ──► timeout
-   └── LGSSHException thrown
-```
-
-### Zero-polling disconnect detection
-
-When the LG node drops the connection — immediately after `sudo reboot`, for example — `LGSSHClient` listens on the raw client's `done` future and transitions to `SSHConnectionState.disconnected` without any timer or polling loop. The status badge turns red the instant the socket closes.
-
-### Execute a command
-
-```dart
-final output = await lgSSHClient.executeCommand(
-  'df -h /',
-  timeout: Duration(seconds: 30),
-);
-// stdout — or "[stderr] …" prefix when only stderr is non-empty
-```
-
-<br/>
-
----
-
-## Service Layer
-
-### Predefined commands — `LGCommandService`
-
-`LGCommandService` wraps `LGSSHClient` with cluster-aware helpers. `executeOnSlave` SSH-hops from the master to any slave using the same stored password. System commands handle teardown order automatically — slaves first, master last — so the HTTP server that slaves poll is always the last thing to go down.
-
-```dart
-await cmd.reboot();           // slaves N→2 then master; connection drops — expected
-await cmd.shutdown();         // same descending order
-await cmd.restartServices();  // pkill chrome + lg-relaunch on every node
-await cmd.sync();             // ~/bin/lg-sync on master
-await cmd.blankScreens();     // empty KML to each slave + clear kmls.txt
-await cmd.moveUp();           // xdotool keydown/up Up  (500 ms hold)
-await cmd.rotateLeft();       // xdotool ctrl+Left
-```
-
-### KML management — `LGKMLController`
-
-Writes and removes KML files on the master's built-in HTTP server. The cluster browser stack polls `kmls.txt` for URLs to load. UI surface planned for a later week.
-
-### Camera control — `LGOrbitController`
-
-Sends `flytoview=<LookAt>` directly to `/tmp/query.txt` — the native LG mechanism for live camera commands. No NetworkLink setup required. Supports fly-to and a 360° orbit animation (60-step, timer-driven). UI surface is the LG Commands screen navigation pad.
-
-### Tour control — `LGTourController`
-
-Writes `gplaytour=NAME` to `~/gs_cmd`, which the `gsync` watcher on the master picks up to start and stop KML tours. UI surface planned for a later week.
-
-<br/>
-
----
-
-## Dependency Injection
-
-All services are **lazy singletons** — created on first access, alive for the entire app lifetime. The SSH session is never dropped and reopened as screens are pushed and popped: the same `LGSSHClient` instance serves every controller.
-
-```mermaid
-graph LR
-    SL["⚡ ServiceLocator.setup()"]
-
-    SL -->|lazy singleton| CR["🔐 CredentialsRepository"]
-    SL -->|lazy singleton| SSH["🔌 LGSSHClient"]
-    SL -->|lazy singleton| CMD["⚙️  LGCommandService"]
-    CMD -->|lazy singleton| KML["🗺️  LGKMLController"]
-    CMD -->|lazy singleton| ORB["🌍 LGOrbitController"]
-    CMD -->|lazy singleton| TOUR["🎬 LGTourController"]
-```
-
-```dart
-// Resolve anywhere — no BuildContext, no Provider tree
-final client = sl<LGSSHClient>();
-final cmd    = sl<LGCommandService>();
-```
-
-> **Rule:** a controller that receives a singleton via `sl<T>()` must **never** call `.dispose()` on it. Ownership stays with `ServiceLocator` for the app's lifetime.
-
-<br/>
-
----
-
-## Credential Security
-
-> 🔐 Five fields. One encrypted enclave. Zero plaintext on disk — ever.
-
-```
-  User enters credentials in Settings
-           │
-           ▼
-  CredentialsRepository.save(SSHCredentials)
-           │
-           ├─ 🤖  Android ───► EncryptedSharedPreferences
-           │                    Android Keystore  ·  AES-256-GCM
-           │                    hardware-backed on API 23+ devices
-           │
-           ├─ 🍎  iOS ──────►  Keychain Services
-           │                    hardware-backed on Secure Enclave devices
-           │
-           └─ 🐧  Linux ────►  libsecret / GNOME keyring
-                               encrypted-file fallback if no keyring daemon
-```
-
-The Kotlin `LGCredentialStore` opens the **same** `EncryptedSharedPreferences` file (`"FlutterSecureStorage"`) using the **same** master key alias (`"_androidx_security_master_key"`) that `flutter_secure_storage` creates. Android Keystore returns the existing key on alias match — so both sides share the enclave with zero duplication and zero cross-process credential passing.
-
-<br/>
-
----
-
-## Android Platform Channels
-
-Android App Widgets and Quick Settings tiles live in the launcher process or a bound service — separate from the Flutter engine. Rather than spinning up a background engine for every button tap, widget and tile operations call `LGSshExecutor` (JSch) directly. The `MethodChannel` bridge remains available for when the main engine is live and Dart code needs to call native operations.
-
-```
-┌──────────────────────┐     MethodChannel (main engine)    ┌─────────────────────────┐
-│  Running Flutter app │  ◄─────────────────────────────►  │  LGCommandChannel.kt    │
-│  (main process)      │  "com.liqtech.lg_quickrig/commands"│  → LGSshExecutor        │
-└──────────────────────┘                                    └─────────────────────────┘
-
-┌──────────────────────┐     PendingIntent → BroadcastReceiver
-│  Home screen widget  │  ──────────────────────────────────► LGHomeWidgetProvider
-│  (launcher process)  │                                        ├─ LGCredentialStore
-└──────────────────────┘                                        └─ LGSshExecutor (JSch)
-
-┌──────────────────────┐     onStartListening / onClick
-│  Quick Settings tile │  ──────────────────────────────────► LGQuickSettingsTile
-│  (System UI process) │                                        ├─ LGCredentialStore
-└──────────────────────┘                                        └─ LGSshExecutor.ping()
-```
-
-**Widget button tap flow:**
-
-```
-Tap → PendingIntent → LGHomeWidgetProvider.onReceive()
-        │  goAsync() extends receiver lifetime to ~30–60 s
-        ├─ LGCredentialStore.load()    reads EncryptedSharedPreferences
-        └─ LGSshExecutor.execute()     opens JSch session, runs command, closes
-                │
-                └─ AppWidgetManager.updateAppWidget()   shows result in widget
-```
-
-**Quick Settings tile:** pings the LG node on `onStartListening()` and sets `STATE_ACTIVE` (teal, reachable), `STATE_INACTIVE` (grey), or `STATE_UNAVAILABLE` (spinner, ping in flight). Tapping when unconfigured opens the main app's Settings screen.
-
-<br/>
-
----
-
-## Liquid Galaxy Command Reference
-
-<details>
-<summary>🖥️ &nbsp;System management</summary>
-
-```bash
-# Reboot master — SSH drops immediately, that's expected
-echo 'password' | sudo -S reboot
-
-# Reboot a slave via ssh-from-master
-sshpass -p lg ssh -t -o StrictHostKeyChecking=no lg@lg2 "echo 'lg' | sudo -S reboot"
-
-# Shut down the entire cluster
-echo 'password' | sudo -S shutdown -h now
-
-# Restart browser stack on a node
-export DISPLAY=:0; pkill -9 chrome; sleep 2; ~/bin/lg-relaunch
-
-# Sync content master → all slaves
-~/bin/lg-sync
-```
-
-</details>
-
-<details>
-<summary>🩺 &nbsp;Diagnostics</summary>
-
-```bash
-# All LG-related processes
-ps aux | grep -E 'chrome|earth|lg'
-
-# Disk space on master
-df -h /
-
-# Ping slave 2
-ping -c 3 lg2
-
-# Slave SSH connectivity check
-sshpass -p lg ssh lg@lg2 'hostname && uptime'
-```
-
-</details>
 
 <br/>
 
@@ -747,22 +450,10 @@ git checkout -b feat/your-feature
 # make changes
 flutter analyze    # must show: No issues found
 flutter test       # must show: All tests passed
-# open PR → main
+# open PR -> main
 ```
 
-### Adding a new cluster command
-
-```
-1. lib/services/lg_command_service.dart          ← add the method
-2. lib/features/dashboard/dashboard_controller.dart  ← _runAction('Label', cmd.yourMethod)
-3. lib/features/dashboard/dashboard_screen.dart  ← _TileConfig entry in _QuickActionsGrid
-4. lib/features/lg_commands/ (controller + screen) ← button in _CommandButtons
-5. Destructive? → route through _confirmAndRun() / _confirmThenRun()
-```
-
-### Adding a new service
-
-New services take `LGCommandService` as a constructor parameter — never `LGSSHClient` directly. Register as a lazy singleton in `lib/core/di/service_locator.dart` following the existing chain.
+New cluster commands go in `lib/services/lg_command_service.dart`. New services take `LGCommandService` as a constructor parameter — never `LGSSHClient` directly — and are registered as lazy singletons in `lib/core/di/service_locator.dart`.
 
 <br/>
 
@@ -796,9 +487,5 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 
 *Liquid Galaxy is an open-source project by the Liquid Galaxy community.*
 *LG QuickRig is an independent tool — not affiliated with Google.*
-
-<br/>
-
-**⭐ Star this repo if it saved you an SSH session**
 
 </div>

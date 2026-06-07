@@ -1,4 +1,4 @@
-package com.example.widgets_app.lg
+package com.liqtech.lg_quickrig.lg
 
 import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
