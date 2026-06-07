@@ -19,30 +19,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/**
- * AppWidgetProvider for the LG QuickRig Live Status widget (2x2 home screen widget).
- *
- * ── What it shows ─────────────────────────────────────────────────────────────
- *   - A colored dot:  green (online) / red (offline) / grey (checking / unconfigured)
- *   - Status label:   "Connected", "Disconnected", "Checking", or "Not configured"
- *   - Host IP (small text below the label)
- *   - Last-updated timestamp
- *
- * ── Auto-refresh model ────────────────────────────────────────────────────────
- * Android's updatePeriodMillis has a 30-minute OS floor, so for a 5-minute
- * refresh we use AlarmManager with ELAPSED_REALTIME (not _WAKEUP) — the alarm
- * fires when the device is already awake and will not drain the battery by
- * waking a sleeping screen.
- *
- *   onEnabled()  → schedule repeating alarm (5 min)
- *   onDisabled() → cancel the alarm
- *   onReceive()  → handle both APPWIDGET_UPDATE and ACTION_REFRESH
- *
- * ── Execution model ───────────────────────────────────────────────────────────
- * onReceive() runs on the main thread with a 10s deadline. We call goAsync()
- * to extend that deadline while the SSH ping runs on Dispatchers.IO.
- * ─────────────────────────────────────────────────────────────────────────────
- */
 class LGStatusWidgetProvider : AppWidgetProvider() {
 
     companion object {
@@ -62,13 +38,11 @@ class LGStatusWidgetProvider : AppWidgetProvider() {
 
         private fun scheduleAlarm(context: Context) {
             val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            val pending = alarmIntent(context)
-            // ELAPSED_REALTIME fires when the device is already awake — no battery drain.
             alarm.setRepeating(
                 AlarmManager.ELAPSED_REALTIME,
                 SystemClock.elapsedRealtime() + 5 * 60 * 1000L,
                 5 * 60 * 1000L,
-                pending,
+                alarmIntent(context),
             )
         }
 
@@ -78,15 +52,11 @@ class LGStatusWidgetProvider : AppWidgetProvider() {
         }
     }
 
-    // ── AppWidgetProvider lifecycle ───────────────────────────────────────────
-
-    /** Called when the first instance of this widget is added to the home screen. */
     override fun onEnabled(context: Context) {
         super.onEnabled(context)
         scheduleAlarm(context)
     }
 
-    /** Called when the last instance of this widget is removed. */
     override fun onDisabled(context: Context) {
         super.onDisabled(context)
         cancelAlarm(context)
@@ -114,8 +84,6 @@ class LGStatusWidgetProvider : AppWidgetProvider() {
         }
     }
 
-    // ── Core refresh logic ────────────────────────────────────────────────────
-
     private suspend fun refreshAll(context: Context) {
         val creds = LGCredentialStore.load(context)
 
@@ -129,7 +97,6 @@ class LGStatusWidgetProvider : AppWidgetProvider() {
             return
         }
 
-        // Show "Checking" state while the ping is in flight.
         applyViews(context) { views ->
             views.setImageViewResource(R.id.status_indicator, R.drawable.status_circle_pending)
             views.setTextViewText(R.id.status_label, "Checking")
@@ -138,7 +105,7 @@ class LGStatusWidgetProvider : AppWidgetProvider() {
         }
 
         val online = LGSshExecutor.ping(creds)
-        val time = TIME_FMT.format(Date())
+        val time   = TIME_FMT.format(Date())
 
         applyViews(context) { views ->
             if (online) {
@@ -153,19 +120,10 @@ class LGStatusWidgetProvider : AppWidgetProvider() {
         }
     }
 
-    // ── RemoteViews helper ────────────────────────────────────────────────────
-
-    /**
-     * Builds a RemoteViews, applies [block] to configure it, then pushes it
-     * to every active instance of this widget. Must be called from a coroutine
-     * since [withContext] is used to switch to the main thread for the update.
-     */
     private suspend fun applyViews(context: Context, block: (RemoteViews) -> Unit) {
         withContext(Dispatchers.Main) {
             val manager = AppWidgetManager.getInstance(context)
-            val ids = manager.getAppWidgetIds(
-                ComponentName(context, LGStatusWidgetProvider::class.java)
-            )
+            val ids     = manager.getAppWidgetIds(ComponentName(context, LGStatusWidgetProvider::class.java))
             if (ids.isEmpty()) return@withContext
             val views = RemoteViews(context.packageName, R.layout.lg_status_widget)
             block(views)
