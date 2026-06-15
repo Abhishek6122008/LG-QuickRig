@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/ssh/ssh_credentials.dart';
 import '../../shared/widgets/connection_status_badge.dart';
-import '../lg_commands/lg_commands_screen.dart';
 import '../settings/settings_screen.dart';
-import '../ssh_test/ssh_test_screen.dart';
 import 'dashboard_controller.dart';
 
 /// The app's landing page.
@@ -27,10 +25,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.dispose();
   }
 
-  // ---------------------------------------------------------------------------
-  // Build
-  // ---------------------------------------------------------------------------
-
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -39,9 +33,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return Scaffold(
           appBar: _buildAppBar(),
           body: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             children: [
-              _ConnectionCard(ctrl: _ctrl, onConnect: _connect, onDisconnect: _ctrl.disconnect),
+              _ConnectionCard(
+                ctrl: _ctrl,
+                onConnect: _connect,
+                onDisconnect: _ctrl.disconnect,
+              ),
               if (_ctrl.lastError != null) ...[
                 const SizedBox(height: 12),
                 _ErrorBanner(message: _ctrl.lastError!),
@@ -68,14 +66,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onSync: _ctrl.sync,
                 onBlankScreens: _ctrl.blankScreens,
                 onCleanKML: _ctrl.cleanKML,
-                onLGCommands: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LGCommandsScreen()),
-                ),
-                onSSHConsole: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SSHTestScreen()),
-                ),
               ),
               if (_ctrl.lastActionLabel != null) ...[
                 const SizedBox(height: 20),
@@ -94,7 +84,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   AppBar _buildAppBar() {
     final busy = _ctrl.isBusy || _ctrl.isAutoConnecting;
     return AppBar(
-      title: const Text('LG QuickRig'),
+      title: const Text(
+        'LG QuickRig',
+        style: TextStyle(fontWeight: FontWeight.w600),
+      ),
       actions: [
         if (busy)
           const Padding(
@@ -135,7 +128,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       MaterialPageRoute(builder: (_) => const SettingsScreen()),
     );
     if (saved != null && mounted) {
-      // Reconnect immediately with the newly saved credentials.
       await _ctrl.connect(creds: saved);
     }
   }
@@ -158,7 +150,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Confirm'),
           ),
         ],
@@ -188,6 +180,7 @@ class _ConnectionCard extends StatelessWidget {
     final connected = ctrl.isConnected;
     final busy = ctrl.isBusy || ctrl.isAutoConnecting;
     final creds = ctrl.credentials;
+    final scheme = Theme.of(context).colorScheme;
 
     return Card(
       child: Padding(
@@ -198,8 +191,7 @@ class _ConnectionCard extends StatelessWidget {
             Text(
               'Connection',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
             ),
             const SizedBox(height: 8),
@@ -209,9 +201,11 @@ class _ConnectionCard extends StatelessWidget {
                     '${creds.nodeCount} node${creds.nodeCount != 1 ? 's' : ''}'
                   : ctrl.isAutoConnecting
                       ? 'Connecting…'
-                      : 'Not connected — tap Connect or open Settings ⚙',
+                      : 'Not connected — tap Connect or open Settings',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: connected ? Colors.greenAccent : Colors.white54,
+                    color: connected
+                        ? const Color(0xFF1E8E3E)
+                        : scheme.onSurfaceVariant,
                   ),
             ),
             const SizedBox(height: 16),
@@ -239,8 +233,8 @@ class _ConnectionCard extends StatelessWidget {
                       : (connected ? 'Disconnect' : 'Connect'),
                 ),
                 style: FilledButton.styleFrom(
-                  backgroundColor:
-                      connected ? Colors.redAccent : null,
+                  backgroundColor: connected ? Colors.red : null,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
               ),
             ),
@@ -262,19 +256,19 @@ class _ErrorBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.redAccent.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.4)),
+        color: const Color(0xFFFCE8E6),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFF4C7C3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.error_outline, color: Colors.redAccent, size: 18),
+          const Icon(Icons.error_outline, color: Color(0xFFC5221F), size: 18),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+              style: const TextStyle(color: Color(0xFFC5221F), fontSize: 13),
             ),
           ),
         ],
@@ -293,8 +287,6 @@ class _QuickActionsGrid extends StatelessWidget {
   final VoidCallback onSync;
   final VoidCallback onBlankScreens;
   final VoidCallback onCleanKML;
-  final VoidCallback onLGCommands;
-  final VoidCallback onSSHConsole;
 
   const _QuickActionsGrid({
     required this.ctrl,
@@ -304,8 +296,6 @@ class _QuickActionsGrid extends StatelessWidget {
     required this.onSync,
     required this.onBlankScreens,
     required this.onCleanKML,
-    required this.onLGCommands,
-    required this.onSSHConsole,
   });
 
   @override
@@ -317,58 +307,38 @@ class _QuickActionsGrid extends StatelessWidget {
       _TileConfig(
         label: 'Reboot',
         icon: Icons.restart_alt,
-        color: Colors.orange,
+        color: const Color(0xFFE8710A),
         onTap: onReboot,
-        needsConnection: true,
       ),
       _TileConfig(
         label: 'Restart Services',
         icon: Icons.refresh_rounded,
-        color: Colors.blueAccent,
+        color: const Color(0xFF1A73E8),
         onTap: onRestart,
-        needsConnection: true,
       ),
       _TileConfig(
         label: 'Shutdown',
         icon: Icons.power_settings_new,
-        color: Colors.redAccent,
+        color: const Color(0xFFD93025),
         onTap: onShutdown,
-        needsConnection: true,
       ),
       _TileConfig(
         label: 'Sync',
         icon: Icons.sync,
-        color: Colors.tealAccent,
+        color: const Color(0xFF12A4AF),
         onTap: onSync,
-        needsConnection: true,
       ),
       _TileConfig(
         label: 'Blank Screens',
         icon: Icons.tv_off_outlined,
-        color: Colors.grey,
+        color: const Color(0xFF5F6368),
         onTap: onBlankScreens,
-        needsConnection: true,
       ),
       _TileConfig(
         label: 'Clean KML',
         icon: Icons.delete_sweep_outlined,
-        color: Colors.purpleAccent,
+        color: const Color(0xFF9334E6),
         onTap: onCleanKML,
-        needsConnection: true,
-      ),
-      _TileConfig(
-        label: 'LG Commands',
-        icon: Icons.dashboard_customize_outlined,
-        color: Colors.cyan,
-        onTap: onLGCommands,
-        needsConnection: false,
-      ),
-      _TileConfig(
-        label: 'SSH Console',
-        icon: Icons.terminal,
-        color: Colors.blueGrey,
-        onTap: onSSHConsole,
-        needsConnection: false,
       ),
     ];
 
@@ -378,8 +348,7 @@ class _QuickActionsGrid extends StatelessWidget {
         Text(
           'Quick Actions',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
         ),
         const SizedBox(height: 12),
@@ -391,7 +360,7 @@ class _QuickActionsGrid extends StatelessWidget {
           crossAxisSpacing: 12,
           childAspectRatio: 2.2,
           children: tiles.map((t) {
-            final enabled = !busy && (!t.needsConnection || connected);
+            final enabled = !busy && connected;
             return _ActionTile(config: t, enabled: enabled);
           }).toList(),
         ),
@@ -405,14 +374,12 @@ class _TileConfig {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
-  final bool needsConnection;
 
   const _TileConfig({
     required this.label,
     required this.icon,
     required this.color,
     required this.onTap,
-    required this.needsConnection,
   });
 }
 
@@ -424,8 +391,9 @@ class _ActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = enabled ? config.color : Colors.white24;
-    final labelColor = enabled ? Colors.white : Colors.white38;
+    final scheme = Theme.of(context).colorScheme;
+    final iconColor = enabled ? config.color : scheme.onSurface.withValues(alpha: 0.26);
+    final labelColor = enabled ? scheme.onSurface : scheme.onSurface.withValues(alpha: 0.38);
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -436,12 +404,12 @@ class _ActionTile extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(7),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: enabled
-                      ? config.color.withValues(alpha: 0.15)
-                      : Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(8),
+                      ? config.color.withValues(alpha: 0.12)
+                      : scheme.onSurface.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(config.icon, color: iconColor, size: 20),
               ),
@@ -484,7 +452,7 @@ class _LastActionBar extends StatelessWidget {
     return Text(
       'Last action: $label${timeStr.isNotEmpty ? '  ·  $timeStr' : ''}',
       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Colors.white38,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
       textAlign: TextAlign.center,
     );

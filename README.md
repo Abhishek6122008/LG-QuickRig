@@ -32,7 +32,7 @@
 
 <table>
 <tr>
-<td align="center"><b>2 / 8</b><br/><sub>Weeks done</sub></td>
+<td align="center"><b>3 / 8</b><br/><sub>Weeks done</sub></td>
 <td align="center"><b>4</b><br/><sub>Flutter screens</sub></td>
 <td align="center"><b>6</b><br/><sub>Kotlin files</sub></td>
 <td align="center"><b>3</b><br/><sub>Android surfaces</sub></td>
@@ -53,9 +53,10 @@
 **LG QuickRig** removes that entirely.
 
 - **One tap from your home screen** — a 4x1 Android widget puts Reboot, Sync, Shutdown, and Blank Screens on your launcher, no app open required
+- **Live Status widget** — a 2x2 widget with a colour-coded dot showing whether the rig is online, auto-refreshed every 5 minutes
 - **Quick Settings tile** — toggle connectivity straight from the system shade, with a live SSH ping confirming reachability
 - **Full companion app** — Dashboard, LG Commands panel, SSH Console, and Settings, all wired to a shared SSH session that persists across screens
-- **Coming:** Live Status widget, AI voice commands, Gemini-powered log monitoring, and a Linux desktop build
+- **Coming:** AI voice commands, Gemini-powered log monitoring, and a Linux desktop build
 
 > The goal is a zero-friction rig operator's tool. If it takes more than one tap, it's too many.
 
@@ -113,6 +114,19 @@
 ╚══════════════════════════════════════════════════════════╝
 ```
 
+```
+╔══════════════════════╗
+║  LG QuickRig         ║
+║                      ║
+║       (green)        ║
+║      Connected       ║
+║     192.168.2.2      ║
+║    Updated 14:32     ║
+║                      ║
+║  Live Status  (2x2)  ║
+╚══════════════════════╝
+```
+
 <br/>
 
 ---
@@ -121,7 +135,7 @@
 
 <div align="center">
 
-`Progress ████████░░░░░░░░░░░░░░░░░░░░░░░░  2 of 8 weeks  (week 3 in progress)`
+`Progress ████████████░░░░░░░░░░░░░░░░░░░░  3 of 8 weeks`
 
 </div>
 
@@ -131,7 +145,7 @@
 |:---:|:---:|:---|:---|
 | ✅ | **1** | **SSH Foundation** | `LGSSHClient` · `LGCommandService` · secure credential storage · Dashboard · LG Commands · SSH Console |
 | ✅ | **2** | **Android Widgets + Platform Channels** | `LGCommandChannel.kt` · `LGCredentialStore.kt` · `LGSshExecutor.kt` (JSch) · Command Bar widget (4x1) · Quick Settings tile |
-| - | **3** | **Live Status Widget** | In progress — `LGStatusWidgetProvider.kt` · 2x2 status widget · green/red ping indicator · 5-min auto-refresh |
+| ✅ | **3** | **Live Status Widget** | `LGStatusWidgetProvider.kt` · 2x2 status widget · green/red ping indicator · 5-min auto-refresh |
 | 🔜 | **4** | **Linux Desktop Build** | `linux/` runner · desktop UI polish · Debian/Ubuntu packaging |
 | 🔜 | **5** | **AI Voice Commands** | Speech-to-SSH pipeline · Gemini API wiring · natural-language cluster control |
 | 🔜 | **6** | **Log Monitoring + Anomaly Detection** | Gemini-powered SSH log analysis · anomaly alerts |
@@ -157,7 +171,7 @@ lg_quickrig/
 │   │       ├── LGSshExecutor.kt          ← JSch SSH client for widget/tile use
 │   │       ├── LGHomeWidgetProvider.kt   ← Command Bar widget (4x1)
 │   │       ├── LGQuickSettingsTile.kt    ← Quick Settings tile
-│   │       └── LGStatusWidgetProvider.kt ← Live Status widget (2x2, in progress)
+│   │       └── LGStatusWidgetProvider.kt ← Live Status widget (2x2)
 │   └── res/
 │       ├── layout/
 │       │   ├── lg_home_widget.xml
@@ -270,6 +284,8 @@ flutter run -d linux   # Linux desktop window
 ```
 
 **To add the Command Bar widget:** long-press launcher → Widgets → LG QuickRig → drag a 4x1 slot.
+
+**To add the Live Status widget:** same widget picker → drag a 2x2 slot.
 
 **To add the Quick Settings tile:** pull down the shade → edit tiles → add *LG QuickRig*.
 

@@ -1,22 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    LG QuickRig — Command Bar widget (4×1)
-
-    RemoteViews constraints (runs inside the launcher process):
-      • Only standard framework View subclasses are allowed — no custom views.
-      • Click feedback is provided by android:foreground on API 23+ (set in code).
-      • PendingIntents are attached in LGHomeWidgetProvider, not in this XML.
-      • Colours are hardcoded — theme attributes are not resolved in RemoteViews.
--->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
-    android:background="#E6101418"
+    android:background="#F2FFFFFF"
     android:padding="6dp"
     android:gravity="center_vertical">
 
-    <!-- ── Reboot ─────────────────────────────────────────────────────────── -->
+    <LinearLayout
+        android:id="@+id/widget_btn_clean"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="#1A00B5A3"
+        android:layout_marginEnd="3dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⌫"
+            android:textSize="18sp"
+            android:textColor="#FF00897B" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Clean"
+            android:textSize="9sp"
+            android:textColor="#B3000000"
+            android:fontFamily="sans-serif-medium" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/widget_btn_relaunch"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="#1A3D7EFF"
+        android:layout_marginEnd="3dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⟳"
+            android:textSize="18sp"
+            android:textColor="#FF2962FF" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Relaunch"
+            android:textSize="9sp"
+            android:textColor="#B3000000"
+            android:fontFamily="sans-serif-medium" />
+    </LinearLayout>
+
     <LinearLayout
         android:id="@+id/widget_btn_reboot"
         android:layout_width="0dp"
@@ -34,47 +80,17 @@
             android:layout_height="wrap_content"
             android:text="↺"
             android:textSize="18sp"
-            android:textColor="#FFFF9500" />
+            android:textColor="#FFE07B00" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Reboot"
             android:textSize="9sp"
-            android:textColor="#CCffffff"
+            android:textColor="#B3000000"
             android:fontFamily="sans-serif-medium" />
     </LinearLayout>
 
-    <!-- ── Sync ───────────────────────────────────────────────────────────── -->
-    <LinearLayout
-        android:id="@+id/widget_btn_sync"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:background="#1A00E5CC"
-        android:layout_marginEnd="3dp"
-        android:clickable="true"
-        android:focusable="true">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="⇄"
-            android:textSize="18sp"
-            android:textColor="#FF00E5CC" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Sync"
-            android:textSize="9sp"
-            android:textColor="#CCffffff"
-            android:fontFamily="sans-serif-medium" />
-    </LinearLayout>
-
-    <!-- ── Shutdown ───────────────────────────────────────────────────────── -->
     <LinearLayout
         android:id="@+id/widget_btn_shutdown"
         android:layout_width="0dp"
@@ -83,52 +99,23 @@
         android:orientation="vertical"
         android:gravity="center"
         android:background="#1AFF3B30"
-        android:layout_marginEnd="3dp"
         android:clickable="true"
         android:focusable="true">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="⏻"
-            android:textSize="18sp"
-            android:textColor="#FFFF3B30" />
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@drawable/ic_power"
+            android:contentDescription="Shutdown" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Shutdown"
             android:textSize="9sp"
-            android:textColor="#CCffffff"
-            android:fontFamily="sans-serif-medium" />
-    </LinearLayout>
-
-    <!-- ── Blank Screens ──────────────────────────────────────────────────── -->
-    <LinearLayout
-        android:id="@+id/widget_btn_blank"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:background="#1A8E8E93"
-        android:clickable="true"
-        android:focusable="true">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="▣"
-            android:textSize="18sp"
-            android:textColor="#FF8E8E93" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Blank"
-            android:textSize="9sp"
-            android:textColor="#CCffffff"
-            android:fontFamily="sans-serif-medium" />
+            android:textColor="#B3000000"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginTop="2dp" />
     </LinearLayout>
 
 </LinearLayout>

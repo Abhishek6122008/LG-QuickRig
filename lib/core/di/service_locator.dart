@@ -4,7 +4,6 @@ import '../../data/repositories/credentials_repository.dart';
 import '../../services/lg_command_service.dart';
 import '../../services/lg_kml_controller.dart';
 import '../../services/lg_orbit_controller.dart';
-import '../../services/lg_tour_controller.dart';
 import '../ssh/ssh_client.dart';
 
 /// Global GetIt instance — import [sl] wherever you need to resolve a service.
@@ -18,7 +17,6 @@ final GetIt sl = GetIt.instance;
 /// Dependency graph (→ = "depends on"):
 ///   LGKMLController → LGCommandService → LGSSHClient
 ///   LGOrbitController → LGCommandService
-///   LGTourController  → LGCommandService
 class ServiceLocator {
   ServiceLocator._();
 
@@ -46,9 +44,6 @@ class ServiceLocator {
     );
     sl.registerLazySingleton<LGOrbitController>(
       () => LGOrbitController(sl<LGCommandService>()),
-    );
-    sl.registerLazySingleton<LGTourController>(
-      () => LGTourController(sl<LGCommandService>()),
     );
   }
 }

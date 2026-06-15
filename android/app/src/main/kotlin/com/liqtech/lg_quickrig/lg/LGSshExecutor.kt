@@ -72,5 +72,13 @@ object LGSshExecutor {
 
     val blankCmd = "echo '' > /var/www/html/kmls.txt"
 
+    val cleanCmd =
+        "rm -f /var/www/html/kml/lgquickrig_*.kml 2>/dev/null; " +
+        "sed -i '/lgquickrig/d' /var/www/html/kmls.txt 2>/dev/null; echo 'cleaned'"
+
+    val relaunchCmd =
+        "export DISPLAY=:0; pkill -9 chrome 2>/dev/null; sleep 1; " +
+        "/home/lg/bin/lg-relaunch 2>/dev/null || ~/scripts/lg-relaunch 2>/dev/null || echo 'relaunch not found'"
+
     private fun shellEscape(s: String) = s.replace("'", "'\\''")
 }

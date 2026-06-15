@@ -50,6 +50,30 @@ class LGCommandChannel(private val context: Context) {
                     result.success(status)
                 }
 
+                "saveCredentials" -> {
+                    val host = call.argument<String>("host")
+                    if (host.isNullOrBlank()) {
+                        result.error("INVALID_ARG", "'host' must not be blank.", null)
+                        return@setMethodCallHandler
+                    }
+                    val port      = call.argument<String>("port")?.toIntOrNull() ?: 22
+                    val username  = call.argument<String>("username") ?: "lg"
+                    val password  = call.argument<String>("password") ?: ""
+                    val nodeCount = call.argument<String>("nodeCount")?.toIntOrNull() ?: 3
+
+                    scope.launch {
+                        LGCredentialStore.save(context, host, port, username, password, nodeCount)
+                        withContext(Dispatchers.Main) { result.success(true) }
+                    }
+                }
+
+                "clearCredentials" -> {
+                    scope.launch {
+                        LGCredentialStore.clear(context)
+                        withContext(Dispatchers.Main) { result.success(true) }
+                    }
+                }
+
                 else -> result.notImplemented()
             }
         }

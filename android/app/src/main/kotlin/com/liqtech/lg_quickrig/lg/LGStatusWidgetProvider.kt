@@ -10,24 +10,26 @@ import android.content.Intent
 import android.os.Build
 import android.os.SystemClock
 import android.widget.RemoteViews
+import com.liqtech.lg_quickrig.MainActivity
 import com.liqtech.lg_quickrig.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class LGStatusWidgetProvider : AppWidgetProvider() {
 
     companion object {
         const val ACTION_REFRESH = "com.liqtech.lg_quickrig.ACTION_STATUS_REFRESH"
 
-        private const val RC_ALARM = 20
-        private val TIME_FMT = SimpleDateFormat("HH:mm", Locale.getDefault())
+        // Extra read by MainActivity to open a camera-control dialog on launch.
+        const val EXTRA_CAMERA_ACTION = "lg_camera_action"
 
-        private fun alarmIntent(context: Context): PendingIntent {
+        private const val RC_ALARM = 20
+        private const val RC_FLYTO = 24
+        private const val RC_ORBIT = 25
+
+        private fun refreshIntent(context: Context): PendingIntent {
             val intent = Intent(context, LGStatusWidgetProvider::class.java).apply {
                 action = ACTION_REFRESH
             }
@@ -36,19 +38,30 @@ class LGStatusWidgetProvider : AppWidgetProvider() {
             return PendingIntent.getBroadcast(context, RC_ALARM, intent, flags)
         }
 
+        /** Opens the app to a camera-control dialog (Fly To / Orbit). */
+        private fun appIntent(context: Context, cameraAction: String, requestCode: Int): PendingIntent {
+            val intent = Intent(context, MainActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                putExtra(EXTRA_CAMERA_ACTION, cameraAction)
+            }
+            val flags = PendingIntent.FLAG_UPDATE_CURRENT or
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+            return PendingIntent.getActivity(context, requestCode, intent, flags)
+        }
+
         private fun scheduleAlarm(context: Context) {
             val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             alarm.setRepeating(
                 AlarmManager.ELAPSED_REALTIME,
                 SystemClock.elapsedRealtime() + 5 * 60 * 1000L,
                 5 * 60 * 1000L,
-                alarmIntent(context),
+                refreshIntent(context),
             )
         }
 
         private fun cancelAlarm(context: Context) {
             val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            alarm.cancel(alarmIntent(context))
+            alarm.cancel(refreshIntent(context))
         }
     }
 
@@ -67,7 +80,9 @@ class LGStatusWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
     ) {
-        refreshAll(context)
+        CoroutineScope(Dispatchers.IO).launch {
+            refreshAll(context)
+        }
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -92,7 +107,6 @@ class LGStatusWidgetProvider : AppWidgetProvider() {
                 views.setImageViewResource(R.id.status_indicator, R.drawable.status_circle_pending)
                 views.setTextViewText(R.id.status_label, "Not configured")
                 views.setTextViewText(R.id.status_host, "Open app to add credentials")
-                views.setTextViewText(R.id.status_time, "")
             }
             return
         }
@@ -101,11 +115,9 @@ class LGStatusWidgetProvider : AppWidgetProvider() {
             views.setImageViewResource(R.id.status_indicator, R.drawable.status_circle_pending)
             views.setTextViewText(R.id.status_label, "Checking")
             views.setTextViewText(R.id.status_host, creds.host)
-            views.setTextViewText(R.id.status_time, "")
         }
 
         val online = LGSshExecutor.ping(creds)
-        val time   = TIME_FMT.format(Date())
 
         applyViews(context) { views ->
             if (online) {
@@ -116,7 +128,6 @@ class LGStatusWidgetProvider : AppWidgetProvider() {
                 views.setTextViewText(R.id.status_label, "Disconnected")
             }
             views.setTextViewText(R.id.status_host, creds.host)
-            views.setTextViewText(R.id.status_time, "Updated $time")
         }
     }
 
@@ -126,6 +137,9 @@ class LGStatusWidgetProvider : AppWidgetProvider() {
             val ids     = manager.getAppWidgetIds(ComponentName(context, LGStatusWidgetProvider::class.java))
             if (ids.isEmpty()) return@withContext
             val views = RemoteViews(context.packageName, R.layout.lg_status_widget)
+            views.setOnClickPendingIntent(R.id.status_header,    refreshIntent(context))
+            views.setOnClickPendingIntent(R.id.status_btn_flyto, appIntent(context, "flyto", RC_FLYTO))
+            views.setOnClickPendingIntent(R.id.status_btn_orbit, appIntent(context, "orbit", RC_ORBIT))
             block(views)
             for (id in ids) manager.updateAppWidget(id, views)
         }

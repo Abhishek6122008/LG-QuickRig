@@ -1,0 +1,152 @@
+import 'package:flutter/material.dart';
+
+import '../../core/di/service_locator.dart';
+import '../../core/ssh/ssh_client.dart';
+import '../../services/lg_orbit_controller.dart';
+
+/// Coordinate-entry dialog shown when the user taps Fly To or Orbit on the
+/// 2x2 home screen widget. Widgets can't take text input inline, so the widget
+/// deep-links into the app and this dialog collects lat/lng/range, then fires
+/// the camera command through the shared [LGOrbitController].
+class CameraActionDialog extends StatefulWidget {
+  /// Either 'flyto' or 'orbit' — matches the widget button that was tapped.
+  final String action;
+
+  const CameraActionDialog({super.key, required this.action});
+
+  /// Shows the dialog for [action]. No-op safe to call from anywhere with a
+  /// [BuildContext] under a [Navigator].
+  static Future<void> show(BuildContext context, String action) {
+    return showDialog(
+      context: context,
+      builder: (_) => CameraActionDialog(action: action),
+    );
+  }
+
+  @override
+  State<CameraActionDialog> createState() => _CameraActionDialogState();
+}
+
+class _CameraActionDialogState extends State<CameraActionDialog> {
+  final _latCtrl = TextEditingController();
+  final _lngCtrl = TextEditingController();
+  final _rangeCtrl = TextEditingController(text: '10000');
+
+  final _orbit = sl<LGOrbitController>();
+  final _ssh = sl<LGSSHClient>();
+
+  bool _busy = false;
+  String? _error;
+
+  bool get _isOrbit => widget.action == 'orbit';
+  String get _title => _isOrbit ? 'Orbit' : 'Fly To';
+
+  @override
+  void dispose() {
+    _latCtrl.dispose();
+    _lngCtrl.dispose();
+    _rangeCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _run() async {
+    final lat = double.tryParse(_latCtrl.text.trim());
+    final lng = double.tryParse(_lngCtrl.text.trim());
+    final range = double.tryParse(_rangeCtrl.text.trim()) ?? 10000;
+
+    if (lat == null || lng == null) {
+      setState(() => _error = 'Enter valid latitude and longitude.');
+      return;
+    }
+    if (!_ssh.isConnected) {
+      setState(() => _error = 'Not connected to the LG rig.');
+      return;
+    }
+
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+
+    try {
+      if (_isOrbit) {
+        await _orbit.orbitPlay(lat: lat, lng: lng, range: range);
+      } else {
+        await _orbit.flyTo(lat: lat, lng: lng, range: range);
+      }
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _error = 'Failed: $e';
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(_title),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _latCtrl,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+              signed: true,
+            ),
+            decoration: const InputDecoration(
+              labelText: 'Latitude',
+              hintText: 'e.g. 27.1751',
+            ),
+          ),
+          TextField(
+            controller: _lngCtrl,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+              signed: true,
+            ),
+            decoration: const InputDecoration(
+              labelText: 'Longitude',
+              hintText: 'e.g. 78.0421',
+            ),
+          ),
+          TextField(
+            controller: _rangeCtrl,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              labelText: 'Range (metres)',
+            ),
+          ),
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(
+                _error!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _busy ? null : () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _busy ? null : _run,
+          child: _busy
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(_isOrbit ? 'Start Orbit' : 'Fly'),
+        ),
+      ],
+    );
+  }
+}
