@@ -32,7 +32,7 @@
 
 <table>
 <tr>
-<td align="center"><b>3 / 8</b><br/><sub>Weeks done</sub></td>
+<td align="center"><b>2 / 8</b><br/><sub>Weeks done</sub></td>
 <td align="center"><b>4</b><br/><sub>Flutter screens</sub></td>
 <td align="center"><b>6</b><br/><sub>Kotlin files</sub></td>
 <td align="center"><b>3</b><br/><sub>Android surfaces</sub></td>
@@ -135,7 +135,7 @@
 
 <div align="center">
 
-`Progress ████████████░░░░░░░░░░░░░░░░░░░░  3 of 8 weeks`
+`Progress ████████░░░░░░░░░░░░░░░░░░░░░░░░  2 of 8 weeks  (week 3 in progress)`
 
 </div>
 
@@ -145,7 +145,7 @@
 |:---:|:---:|:---|:---|
 | ✅ | **1** | **SSH Foundation** | `LGSSHClient` · `LGCommandService` · secure credential storage · Dashboard · LG Commands · SSH Console |
 | ✅ | **2** | **Android Widgets + Platform Channels** | `LGCommandChannel.kt` · `LGCredentialStore.kt` · `LGSshExecutor.kt` (JSch) · Command Bar widget (4x1) · Quick Settings tile |
-| ✅ | **3** | **Live Status Widget** | `LGStatusWidgetProvider.kt` · 2x2 status widget · green/red ping indicator · 5-min auto-refresh |
+| - | **3** | **Live Status Widget** | In progress — `LGStatusWidgetProvider.kt` · 2x2 status widget · green/red ping indicator · 5-min auto-refresh |
 | 🔜 | **4** | **Linux Desktop Build** | `linux/` runner · desktop UI polish · Debian/Ubuntu packaging |
 | 🔜 | **5** | **AI Voice Commands** | Speech-to-SSH pipeline · Gemini API wiring · natural-language cluster control |
 | 🔜 | **6** | **Log Monitoring + Anomaly Detection** | Gemini-powered SSH log analysis · anomaly alerts |
