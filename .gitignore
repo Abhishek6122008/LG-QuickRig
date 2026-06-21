@@ -4,6 +4,9 @@
 ### IDE ###
 # VS Code workspace settings — personal, not project config
 .vscode/
+# IntelliJ / Android Studio
+.idea/
+*.iml
 
 ### Flutter ###
 # Flutter/Dart/Pub related
