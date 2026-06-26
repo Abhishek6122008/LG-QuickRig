@@ -2,13 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../core/ssh/ssh_credentials.dart';
 import '../../shared/widgets/connection_status_badge.dart';
+import '../lg_commands/image_overlay_dialog.dart';
 import '../settings/settings_screen.dart';
 import 'dashboard_controller.dart';
 
-/// The app's landing page.
-///
-/// Shows the LG connection state, a connect/disconnect button, and a grid of
-/// quick-action tiles for the most common LG operations.
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -66,6 +63,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onSync: _ctrl.sync,
                 onBlankScreens: _ctrl.blankScreens,
                 onCleanKML: _ctrl.cleanKML,
+                onImageOverlay: () => ImageOverlayDialog.show(context),
               ),
               if (_ctrl.lastActionLabel != null) ...[
                 const SizedBox(height: 20),
@@ -116,10 +114,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Actions
-  // ---------------------------------------------------------------------------
-
   Future<void> _connect() => _ctrl.connect();
 
   Future<void> _openSettings() async {
@@ -159,10 +153,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (confirmed == true && mounted) await action();
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Sub-widgets
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _ConnectionCard extends StatelessWidget {
   final DashboardController ctrl;
@@ -245,8 +235,6 @@ class _ConnectionCard extends StatelessWidget {
   }
 }
 
-// ── Error banner ──────────────────────────────────────────────────────────────
-
 class _ErrorBanner extends StatelessWidget {
   final String message;
   const _ErrorBanner({required this.message});
@@ -277,8 +265,6 @@ class _ErrorBanner extends StatelessWidget {
   }
 }
 
-// ── Quick actions grid ────────────────────────────────────────────────────────
-
 class _QuickActionsGrid extends StatelessWidget {
   final DashboardController ctrl;
   final VoidCallback onReboot;
@@ -287,6 +273,7 @@ class _QuickActionsGrid extends StatelessWidget {
   final VoidCallback onSync;
   final VoidCallback onBlankScreens;
   final VoidCallback onCleanKML;
+  final VoidCallback onImageOverlay;
 
   const _QuickActionsGrid({
     required this.ctrl,
@@ -296,6 +283,7 @@ class _QuickActionsGrid extends StatelessWidget {
     required this.onSync,
     required this.onBlankScreens,
     required this.onCleanKML,
+    required this.onImageOverlay,
   });
 
   @override
@@ -339,6 +327,12 @@ class _QuickActionsGrid extends StatelessWidget {
         icon: Icons.delete_sweep_outlined,
         color: const Color(0xFF9334E6),
         onTap: onCleanKML,
+      ),
+      _TileConfig(
+        label: 'Image Overlay',
+        icon: Icons.add_photo_alternate_outlined,
+        color: const Color(0xFF1A73E8),
+        onTap: onImageOverlay,
       ),
     ];
 
@@ -431,8 +425,6 @@ class _ActionTile extends StatelessWidget {
     );
   }
 }
-
-// ── Last action footer ────────────────────────────────────────────────────────
 
 class _LastActionBar extends StatelessWidget {
   final String label;

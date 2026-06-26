@@ -1,12 +1,10 @@
-/// All parameters needed to open an SSH session to the Liquid Galaxy cluster.
+
 class SSHCredentials {
   final String host;
   final int port;
   final String username;
   final String password;
 
-  /// Total number of LG nodes (master + slaves). Used by [LGCommandService]
-  /// when broadcasting commands across the cluster.
   final int nodeCount;
 
   const SSHCredentials({

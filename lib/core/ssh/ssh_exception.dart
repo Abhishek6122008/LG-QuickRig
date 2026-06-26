@@ -1,4 +1,4 @@
-/// Thrown for any SSH-layer error surfaced by [LGSSHClient].
+
 class LGSSHException implements Exception {
   final String message;
 

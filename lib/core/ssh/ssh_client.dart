@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:dartssh2/dartssh2.dart';
 
@@ -7,7 +8,6 @@ import '../constants.dart';
 import 'ssh_credentials.dart';
 import 'ssh_exception.dart';
 
-/// Lifecycle states exposed to the UI layer.
 enum SSHConnectionState {
   disconnected,
   connecting,
@@ -15,18 +15,6 @@ enum SSHConnectionState {
   disconnecting,
 }
 
-/// Low-level SSH transport for the Liquid Galaxy master node.
-///
-/// Registered as a singleton in [ServiceLocator]. Consumers (controllers,
-/// services) inject it via GetIt — they must NOT call [dispose] themselves.
-///
-/// Usage:
-/// ```dart
-/// final client = sl<LGSSHClient>();
-/// await client.connect(creds);
-/// final out = await client.executeCommand('echo hello');
-/// await client.disconnect();
-/// ```
 class LGSSHClient {
   SSHClient? _rawClient;
   SSHCredentials? _credentials;
@@ -34,13 +22,9 @@ class LGSSHClient {
   final _stateController = StreamController<SSHConnectionState>.broadcast();
   SSHConnectionState _state = SSHConnectionState.disconnected;
 
-  /// Broadcast stream — emits on every state transition.
   Stream<SSHConnectionState> get stateStream => _stateController.stream;
-
   SSHConnectionState get state => _state;
   bool get isConnected => _state == SSHConnectionState.connected;
-
-  /// The credentials used for the current (or last) connection attempt.
   SSHCredentials? get credentials => _credentials;
 
   void _setState(SSHConnectionState s) {
@@ -48,13 +32,6 @@ class LGSSHClient {
     _stateController.add(s);
   }
 
-  // ---------------------------------------------------------------------------
-  // Public API
-  // ---------------------------------------------------------------------------
-
-  /// Opens an SSH connection, retrying up to [maxRetries] times.
-  ///
-  /// Throws [LGSSHException] on auth failure or when all retries are exhausted.
   Future<void> connect(
     SSHCredentials credentials, {
     int maxRetries = LGDefaults.maxRetries,
@@ -86,14 +63,10 @@ class LGSSHClient {
         );
 
         await _rawClient!.authenticated;
-
-        // Monitor for unexpected server-side disconnects (e.g., LG node reboot).
         _watchForRemoteDisconnect();
-
         _setState(SSHConnectionState.connected);
         return;
       } on SSHAuthAbortError catch (e) {
-        // Wrong credentials — no point retrying.
         await _cleanupRawClient();
         _setState(SSHConnectionState.disconnected);
         throw LGSSHException('Authentication failed: $e');
@@ -110,7 +83,6 @@ class LGSSHClient {
     );
   }
 
-  /// Gracefully closes the SSH session.
   Future<void> disconnect() async {
     if (_state == SSHConnectionState.disconnected) return;
     _setState(SSHConnectionState.disconnecting);
@@ -118,17 +90,22 @@ class LGSSHClient {
     _setState(SSHConnectionState.disconnected);
   }
 
-  /// Sends [command] to the remote shell and returns stdout (+ stderr prefix).
-  ///
-  /// Throws [LGSSHException] if not connected, if execution times out,
-  /// or if the SSH session itself fails.
+  Future<void> _ensureAlive() async {
+    if (_rawClient != null && !_rawClient!.isClosed) return;
+    _rawClient = null;
+    if (_state == SSHConnectionState.connected) {
+      _setState(SSHConnectionState.disconnected);
+    }
+    final creds = _credentials;
+    if (creds == null) throw const LGSSHException('Not connected to the LG node.');
+    await connect(creds);
+  }
+
   Future<String> executeCommand(
     String command, {
     Duration timeout = LGDefaults.commandTimeout,
   }) async {
-    if (!isConnected || _rawClient == null) {
-      throw const LGSSHException('Not connected to the LG node.');
-    }
+    await _ensureAlive();
 
     late final SSHSession session;
     try {
@@ -140,8 +117,6 @@ class LGSSHClient {
     final stdoutBuf = StringBuffer();
     final stderrBuf = StringBuffer();
 
-    // Uint8List implements List<int> but the static type mismatch requires
-    // an explicit cast before Utf8Decoder can bind as a StreamTransformer.
     final stdoutDone = session.stdout
         .cast<List<int>>()
         .transform(const Utf8Decoder(allowMalformed: true))
@@ -170,19 +145,27 @@ class LGSSHClient {
     return output;
   }
 
-  /// Release resources. Called only by [ServiceLocator] on app teardown.
+  Future<void> uploadBytes(List<int> bytes, String remotePath) async {
+    await _ensureAlive();
+    final sftp = await _rawClient!.sftp();
+    final file = await sftp.open(
+      remotePath,
+      mode: SftpFileOpenMode.create |
+          SftpFileOpenMode.write |
+          SftpFileOpenMode.truncate,
+    );
+    try {
+      await file.write(Stream.value(Uint8List.fromList(bytes)));
+    } finally {
+      await file.close();
+    }
+  }
+
   void dispose() {
     _cleanupRawClient();
     _stateController.close();
   }
 
-  // ---------------------------------------------------------------------------
-  // Internal
-  // ---------------------------------------------------------------------------
-
-  /// Listens on the raw client's `done` future so that if the LG server drops
-  /// the connection (e.g., after a reboot command) the state updates to
-  /// [SSHConnectionState.disconnected] without requiring an explicit call.
   void _watchForRemoteDisconnect() {
     _rawClient?.done.then(
       (_) => _onRemoteClose(),
@@ -191,8 +174,6 @@ class LGSSHClient {
   }
 
   void _onRemoteClose() {
-    // Only act if we think we're still connected — avoids firing during a
-    // deliberate disconnect() call that already moved us to disconnecting.
     if (_state == SSHConnectionState.connected) {
       _rawClient = null;
       _setState(SSHConnectionState.disconnected);
