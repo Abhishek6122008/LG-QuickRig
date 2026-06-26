@@ -5,14 +5,6 @@ import '../../core/di/service_locator.dart';
 import '../../core/ssh/ssh_credentials.dart';
 import '../../data/repositories/credentials_repository.dart';
 
-/// Credential configuration screen.
-///
-/// Loads saved credentials from [CredentialsRepository] on open and writes
-/// back to it on Save. Returns the saved [SSHCredentials] via [Navigator.pop]
-/// so the caller can reconnect immediately without reading storage again.
-///
-/// Password is stored in the platform secure enclave (Keystore / Keychain /
-/// libsecret) — no plain-text disk writes.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -58,8 +50,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _portCtrl.text = creds.port.toString();
       _userCtrl.text = creds.username;
       _nodeCtrl.text = creds.nodeCount.toString();
-      // Password is intentionally not pre-filled — forces the user to
-      // re-enter it, confirming they know the credential.
+
     }
     setState(() => _loading = false);
   }
@@ -82,10 +73,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     Navigator.pop(context, creds);
   }
-
-  // ---------------------------------------------------------------------------
-  // Build
-  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {

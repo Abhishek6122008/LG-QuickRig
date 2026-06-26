@@ -8,14 +8,6 @@ import '../../data/repositories/credentials_repository.dart';
 import '../../services/lg_command_service.dart';
 import '../../services/lg_kml_controller.dart';
 
-/// Drives [DashboardScreen].
-///
-/// On construction it immediately starts a silent auto-connect attempt using
-/// any credentials that were saved in a previous session. The UI renders in
-/// disconnected state while this resolves — no blocking splash screen needed.
-///
-/// All singletons are resolved from [sl] so the same [LGSSHClient] is shared
-/// with [SSHTestScreen] (and any future screen that injects it).
 class DashboardController extends ChangeNotifier {
   final LGSSHClient _sshClient = sl<LGSSHClient>();
   final LGCommandService _commandService = sl<LGCommandService>();
@@ -24,39 +16,25 @@ class DashboardController extends ChangeNotifier {
 
   bool isBusy = false;
 
-  /// True while the initial silent auto-connect attempt is in progress.
-  /// Distinct from [isBusy] so the UI can show a subtle indicator rather than
-  /// blocking all actions.
   bool isAutoConnecting = false;
 
   String? lastActionLabel;
   DateTime? lastActionTime;
 
-  /// Non-null when the last operation ended with an error.
   String? lastError;
-
-  // ---------------------------------------------------------------------------
-  // Read-only state derived from the singleton SSH client
-  // ---------------------------------------------------------------------------
 
   SSHConnectionState get connectionState => _sshClient.state;
   bool get isConnected => _sshClient.isConnected;
   SSHCredentials? get credentials => _sshClient.credentials;
 
   DashboardController() {
-    // Mirror every SSH state transition into the UI.
+
     _sshClient.stateStream.listen((_) {
       notifyListeners();
     });
     _tryAutoConnect();
   }
 
-  // ---------------------------------------------------------------------------
-  // Connection
-  // ---------------------------------------------------------------------------
-
-  /// Silently connects using saved credentials on app start.
-  /// Errors are suppressed — the user can always hit Connect manually.
   Future<void> _tryAutoConnect() async {
     isAutoConnecting = true;
     notifyListeners();
@@ -66,18 +44,12 @@ class DashboardController extends ChangeNotifier {
       if (creds != null && creds.host.isNotEmpty) {
         await _sshClient.connect(creds);
       }
-    } catch (_) {
-      // Swallow — show disconnected state, not an error banner on first launch.
-    } finally {
+    } catch (_) {} finally {
       isAutoConnecting = false;
       notifyListeners();
     }
   }
 
-  /// Connects using [creds] if provided, otherwise loads saved credentials.
-  ///
-  /// Disconnects any existing session first so callers do not need to check
-  /// current state before calling this.
   Future<void> connect({SSHCredentials? creds}) async {
     if (isBusy) return;
 
@@ -120,10 +92,6 @@ class DashboardController extends ChangeNotifier {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Quick actions — called from the dashboard grid
-  // ---------------------------------------------------------------------------
-
   Future<void> reboot() =>
       _runAction('Reboot', _commandService.reboot);
 
@@ -141,10 +109,6 @@ class DashboardController extends ChangeNotifier {
 
   Future<void> cleanKML() =>
       _runAction('Clean KML', _kmlController.cleanKML);
-
-  // ---------------------------------------------------------------------------
-  // Internal
-  // ---------------------------------------------------------------------------
 
   Future<void> _runAction(
     String label,
@@ -173,5 +137,4 @@ class DashboardController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Consumers must not dispose the SSH singleton — it is owned by ServiceLocator.
 }

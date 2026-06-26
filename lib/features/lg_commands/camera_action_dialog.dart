@@ -4,18 +4,12 @@ import '../../core/di/service_locator.dart';
 import '../../core/ssh/ssh_client.dart';
 import '../../services/lg_orbit_controller.dart';
 
-/// Coordinate-entry dialog shown when the user taps Fly To or Orbit on the
-/// 2x2 home screen widget. Widgets can't take text input inline, so the widget
-/// deep-links into the app and this dialog collects lat/lng/range, then fires
-/// the camera command through the shared [LGOrbitController].
 class CameraActionDialog extends StatefulWidget {
-  /// Either 'flyto' or 'orbit' — matches the widget button that was tapped.
+
   final String action;
 
   const CameraActionDialog({super.key, required this.action});
 
-  /// Shows the dialog for [action]. No-op safe to call from anywhere with a
-  /// [BuildContext] under a [Navigator].
   static Future<void> show(BuildContext context, String action) {
     return showDialog(
       context: context,
@@ -52,9 +46,9 @@ class _CameraActionDialogState extends State<CameraActionDialog> {
   Future<void> _run() async {
     final lat = double.tryParse(_latCtrl.text.trim());
     final lng = double.tryParse(_lngCtrl.text.trim());
-    final range = double.tryParse(_rangeCtrl.text.trim()) ?? 10000;
+    final range = double.tryParse(_rangeCtrl.text.trim());
 
-    if (lat == null || lng == null) {
+    if (!_isOrbit && (lat == null || lng == null)) {
       setState(() => _error = 'Enter valid latitude and longitude.');
       return;
     }
@@ -70,9 +64,16 @@ class _CameraActionDialogState extends State<CameraActionDialog> {
 
     try {
       if (_isOrbit) {
-        await _orbit.orbitPlay(lat: lat, lng: lng, range: range);
+        final started = await _orbit.orbitPlay(lat: lat, lng: lng, range: range);
+        if (!started && mounted) {
+          setState(() {
+            _busy = false;
+            _error = 'Fly to a location first, or enter coordinates.';
+          });
+          return;
+        }
       } else {
-        await _orbit.flyTo(lat: lat, lng: lng, range: range);
+        await _orbit.flyTo(lat: lat!, lng: lng!, range: range ?? 10000);
       }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {

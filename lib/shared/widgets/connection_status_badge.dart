@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/ssh/ssh_client.dart';
 
-/// Small coloured pill that reflects the current SSH connection state.
 class ConnectionStatusBadge extends StatelessWidget {
   final SSHConnectionState state;
 

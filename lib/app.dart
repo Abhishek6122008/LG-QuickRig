@@ -16,16 +16,12 @@ class _LGQuickRigAppState extends State<LGQuickRigApp> {
 
   final _navKey = GlobalKey<NavigatorState>();
 
-  /// True when the app was cold-launched purely to show a camera dialog from
-  /// the home screen widget. In that mode we render a transparent barrier
-  /// instead of the dashboard, so the dialog floats over the launcher.
   bool _cameraOnly = false;
 
   @override
   void initState() {
     super.initState();
 
-    // Warm start: the widget launched us while already running.
     _channel.setMethodCallHandler((call) async {
       if (call.method == 'openCamera' && call.arguments is String) {
         _openCamera(call.arguments as String, cameraOnly: false);
@@ -33,7 +29,6 @@ class _LGQuickRigAppState extends State<LGQuickRigApp> {
       return null;
     });
 
-    // Cold start: ask the native side whether a widget button launched us.
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkPending());
   }
 
@@ -44,17 +39,14 @@ class _LGQuickRigAppState extends State<LGQuickRigApp> {
         setState(() => _cameraOnly = true);
         _openCamera(action, cameraOnly: true);
       }
-    } catch (_) {
-      // No native handler (e.g. non-Android) — ignore.
-    }
+    } catch (_) {}
   }
 
   Future<void> _openCamera(String action, {required bool cameraOnly}) async {
     final ctx = _navKey.currentContext;
     if (ctx == null) return;
     await CameraActionDialog.show(ctx, action);
-    // When this was a camera-only launch, close the app once the dialog is
-    // dismissed so the user returns straight to their home screen.
+
     if (cameraOnly) SystemNavigator.pop();
   }
 
@@ -66,7 +58,7 @@ class _LGQuickRigAppState extends State<LGQuickRigApp> {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1A73E8), // Google blue
+          seedColor: const Color(0xFF1A73E8),
           brightness: Brightness.light,
         ),
         scaffoldBackgroundColor: const Color(0xFFF8F9FA),

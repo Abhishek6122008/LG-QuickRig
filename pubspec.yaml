@@ -10,8 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
-  # SSH transport to the LG master node.
+  tray_manager: ^0.2.3
+  image_picker: ^1.1.2
   dartssh2: ^2.9.0
 
   # Encrypted storage for SSH credentials (host, username, password).
@@ -30,3 +30,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/tray_icon.png

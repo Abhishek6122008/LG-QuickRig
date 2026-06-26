@@ -4,11 +4,6 @@ import 'package:flutter/foundation.dart';
 
 import 'lg_command_service.dart';
 
-/// Controls the Liquid Galaxy viewport — fly-to, orbit, and camera reset.
-///
-/// View commands are sent by writing a `flytoview=<LookAt>` line to
-/// `/tmp/query.txt`, which the LG master process monitors natively.
-/// No NetworkLink setup is required.
 class LGOrbitController {
   final LGCommandService _commandService;
 
@@ -16,15 +11,14 @@ class LGOrbitController {
   bool _orbitPlaying = false;
   String? _lastOrbitPosition;
 
+  double? _lastLat;
+  double? _lastLng;
+  double? _lastRange;
+
   LGOrbitController(this._commandService);
 
   bool get isOrbitPlaying => _orbitPlaying;
 
-  // ---------------------------------------------------------------------------
-  // Fly-to
-  // ---------------------------------------------------------------------------
-
-  /// Smoothly moves the LG camera to the given geographic point.
   Future<void> flyTo({
     required double lat,
     required double lng,
@@ -32,6 +26,10 @@ class LGOrbitController {
     double tilt = 0,
     double heading = 0,
   }) async {
+    _lastLat = lat;
+    _lastLng = lng;
+    _lastRange = range;
+
     final lookAt = '<LookAt>'
         '<latitude>$lat</latitude>'
         '<longitude>$lng</longitude>'
@@ -44,22 +42,20 @@ class LGOrbitController {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Orbit
-  // ---------------------------------------------------------------------------
-
-  /// Starts a 360° orbit animation around [lat]/[lng] at [range] metres.
-  ///
-  /// Returns `false` if an orbit is already playing; `true` when started.
-  /// [onStop] is called when the animation finishes or is cancelled.
   Future<bool> orbitPlay({
-    required double lat,
-    required double lng,
-    required double range,
+    double? lat,
+    double? lng,
+    double? range,
     double tilt = 45,
     VoidCallback? onStop,
   }) async {
     if (_orbitPlaying) return false;
+
+    final orbitLat = lat ?? _lastLat;
+    final orbitLng = lng ?? _lastLng;
+    final orbitRange = range ?? _lastRange ?? 10000;
+    if (orbitLat == null || orbitLng == null) return false;
+
     _orbitPlaying = true;
 
     const int steps = 60;
@@ -83,9 +79,9 @@ class LGOrbitController {
         final lookAt = '<gx:duration>0.3</gx:duration>'
             '<gx:flyToMode>smooth</gx:flyToMode>'
             '<LookAt>'
-            '<longitude>$lng</longitude>'
-            '<latitude>$lat</latitude>'
-            '<range>$range</range>'
+            '<longitude>$orbitLng</longitude>'
+            '<latitude>$orbitLat</latitude>'
+            '<range>$orbitRange</range>'
             '<tilt>$tilt</tilt>'
             '<heading>$bearing</heading>'
             '<gx:altitudeMode>relativeToGround</gx:altitudeMode>'
@@ -102,7 +98,6 @@ class LGOrbitController {
     return true;
   }
 
-  /// Cancels the orbit animation and holds the camera at the last position.
   Future<void> orbitStop() async {
     _orbitTimer?.cancel();
     _orbitTimer = null;

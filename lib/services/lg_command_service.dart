@@ -1,51 +1,29 @@
 import '../core/ssh/ssh_client.dart';
 import '../core/ssh/ssh_exception.dart';
 
-/// Sits one layer above [LGSSHClient].
-///
-/// Responsibilities:
-///   1. Raw command execution on the master node (LG1).
-///   2. Slave-node execution via ssh-from-master, using the stored password.
-///   3. Cluster-level system commands: reboot, shutdown, restart, sync.
-///
-/// All public methods throw [LGSSHException] on failure.
-/// Callers (controllers, dashboard) are expected to catch and surface errors.
 class LGCommandService {
   final LGSSHClient _client;
 
   LGCommandService(this._client);
 
-  // ---------------------------------------------------------------------------
-  // State
-  // ---------------------------------------------------------------------------
-
   bool get isConnected => _client.isConnected;
 
-  /// Total LG nodes (master + slaves) from the active credentials.
   int get nodeCount => _client.credentials?.nodeCount ?? 3;
 
-  // ---------------------------------------------------------------------------
-  // Raw execution
-  // ---------------------------------------------------------------------------
-
-  /// Executes [command] on the LG master node and returns stdout.
   Future<String> execute(String command) => _client.executeCommand(command);
 
-  /// Executes [command] on slave node [node] (range: 2..nodeCount) via SSH
-  /// from the master.
-  ///
-  /// Standard LG clusters share the same password across all nodes.
-  /// The password is taken from the active [SSHCredentials].
-  ///
-  /// Note: The password is shell-quoted but if it contains single-quotes you
-  /// must ensure it is URL-encoded or changed before shipping to production.
+  String get host => _client.credentials?.host ?? '';
+
+  Future<void> uploadFile(List<int> bytes, String remotePath) =>
+      _client.uploadBytes(bytes, remotePath);
+
   Future<String> executeOnSlave(int node, String command) {
     assert(
       node >= 2 && node <= nodeCount,
       'Node index $node is out of range [2, $nodeCount]',
     );
     final pass = _client.credentials?.password ?? 'lg';
-    // Escape single-quotes in the password to prevent shell injection.
+
     final safePass = pass.replaceAll("'", r"'\''");
     return execute(
       "sshpass -p '$safePass' ssh -t "
@@ -55,52 +33,30 @@ class LGCommandService {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // System commands
-  // ---------------------------------------------------------------------------
-
-  /// Reboots every node in the cluster.
-  ///
-  /// Slaves are rebooted first (in descending order) so the master — which
-  /// serves KML/HTTP — is last. The SSH connection will drop immediately after
-  /// the master reboot command is sent; this is expected and not re-thrown.
   Future<void> reboot() async {
     final safePass = _sudoPass();
     for (int i = nodeCount; i >= 2; i--) {
       try {
         await executeOnSlave(i, "echo '$safePass' | sudo -S reboot");
-      } on LGSSHException {
-        // Slave drops the connection as soon as it starts rebooting — normal.
-      }
+      } on LGSSHException {}
     }
     try {
       await execute("echo '$safePass' | sudo -S reboot");
-    } on LGSSHException {
-      // Master drops the connection immediately — expected.
-    }
+    } on LGSSHException {}
   }
 
-  /// Shuts down every node in the cluster.
   Future<void> shutdown() async {
     final safePass = _sudoPass();
     for (int i = nodeCount; i >= 2; i--) {
       try {
         await executeOnSlave(i, "echo '$safePass' | sudo -S shutdown -h now");
-      } on LGSSHException {
-        // Same pattern as reboot — connection drops after the command.
-      }
+      } on LGSSHException {}
     }
     try {
       await execute("echo '$safePass' | sudo -S shutdown -h now");
-    } on LGSSHException {
-      // Expected — master shuts down before SSH can send a clean response.
-    }
+    } on LGSSHException {}
   }
 
-  /// Restarts the Liquid Galaxy browser/presentation stack on every node.
-  ///
-  /// Tries the standard LG relaunch script; falls back to a direct pkill
-  /// so the caller knows whether any step succeeded.
   Future<void> restartServices() async {
     for (int i = nodeCount; i >= 1; i--) {
       final cmd =
@@ -117,7 +73,6 @@ class LGCommandService {
     }
   }
 
-  /// Runs the LG sync script on the master, which propagates content to slaves.
   Future<void> sync() async {
     await execute(
       "~/scripts/lg-sync 2>/dev/null "
@@ -126,8 +81,6 @@ class LGCommandService {
     );
   }
 
-  /// Blanks all LG screens by writing empty KML files to each slave and
-  /// clearing the master's KML reference list.
   Future<void> blankScreens() async {
     for (int i = nodeCount; i >= 2; i--) {
       try {
@@ -135,26 +88,15 @@ class LGCommandService {
           i,
           'echo "" > /var/www/html/kml/slave_$i.kml',
         );
-      } on LGSSHException {
-        // Continue even if a slave is unreachable.
-      }
+      } on LGSSHException {}
     }
     await execute('echo "" > /var/www/html/kmls.txt');
   }
 
-  // ---------------------------------------------------------------------------
-  // Internal helpers
-  // ---------------------------------------------------------------------------
-
-  /// Returns the SSH password, single-quote-escaped for use in shell strings.
   String _sudoPass() {
     final pass = _client.credentials?.password ?? 'lg';
     return pass.replaceAll("'", r"'\''");
   }
-
-  // ---------------------------------------------------------------------------
-  // Navigation commands (xdotool key injection)
-  // ---------------------------------------------------------------------------
 
   Future<void> moveUp() async {
     await execute('export DISPLAY=:0; xdotool keydown Up');
