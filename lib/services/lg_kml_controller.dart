@@ -8,18 +8,10 @@ class LGKMLController {
 
   LGKMLController(this._commandService);
 
-  Future<void> sendKML(String kml, {int slave = 1}) async {
+  Future<void> sendKML(String kml) async {
     final escaped = _shellEscape(kml);
     await _commandService.execute(
-      "echo '$escaped' > $_kmlDir/lgquickrig_$slave.kml",
-    );
-  }
-
-  Future<void> sendSlaveKML(String kml, int node) async {
-    final escaped = _shellEscape(kml);
-    await _commandService.executeOnSlave(
-      node,
-      "echo '$escaped' > $_kmlDir/slave_$node.kml",
+      "echo '$escaped' > $_kmlDir/lgquickrig_1.kml",
     );
   }
 
@@ -36,10 +28,6 @@ class LGKMLController {
     await _commandService.execute(
       "sed -i '/lgquickrig/d' $_kmlsFile 2>/dev/null || true",
     );
-  }
-
-  Future<void> clearAllKMLReferences() async {
-    await _commandService.execute('echo "" > $_kmlsFile');
   }
 
   Future<void> groundOverlay({

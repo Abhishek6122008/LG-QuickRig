@@ -38,11 +38,15 @@ class LGCommandService {
     for (int i = nodeCount; i >= 2; i--) {
       try {
         await executeOnSlave(i, "echo '$safePass' | sudo -S reboot");
-      } on LGSSHException {}
+      } on LGSSHException {
+        // node drops the connection as it goes down — expected, keep going
+      }
     }
     try {
       await execute("echo '$safePass' | sudo -S reboot");
-    } on LGSSHException {}
+    } on LGSSHException {
+      // master drops us as it reboots — expected
+    }
   }
 
   Future<void> shutdown() async {
@@ -50,11 +54,15 @@ class LGCommandService {
     for (int i = nodeCount; i >= 2; i--) {
       try {
         await executeOnSlave(i, "echo '$safePass' | sudo -S shutdown -h now");
-      } on LGSSHException {}
+      } on LGSSHException {
+        // node drops the connection as it powers off — expected, keep going
+      }
     }
     try {
       await execute("echo '$safePass' | sudo -S shutdown -h now");
-    } on LGSSHException {}
+    } on LGSSHException {
+      // master drops us as it powers off — expected
+    }
   }
 
   Future<void> restartServices() async {
@@ -88,7 +96,9 @@ class LGCommandService {
           i,
           'echo "" > /var/www/html/kml/slave_$i.kml',
         );
-      } on LGSSHException {}
+      } on LGSSHException {
+        // one unreachable slave shouldn't stop us blanking the rest
+      }
     }
     await execute('echo "" > /var/www/html/kmls.txt');
   }
@@ -96,29 +106,5 @@ class LGCommandService {
   String _sudoPass() {
     final pass = _client.credentials?.password ?? 'lg';
     return pass.replaceAll("'", r"'\''");
-  }
-
-  Future<void> moveUp() async {
-    await execute('export DISPLAY=:0; xdotool keydown Up');
-    await Future.delayed(const Duration(milliseconds: 500));
-    await execute('export DISPLAY=:0; xdotool keyup Up');
-  }
-
-  Future<void> moveDown() async {
-    await execute('export DISPLAY=:0; xdotool keydown Down');
-    await Future.delayed(const Duration(milliseconds: 500));
-    await execute('export DISPLAY=:0; xdotool keyup Down');
-  }
-
-  Future<void> rotateLeft() async {
-    await execute('export DISPLAY=:0; xdotool keydown ctrl+Left');
-    await Future.delayed(const Duration(milliseconds: 500));
-    await execute('export DISPLAY=:0; xdotool keyup ctrl+Left');
-  }
-
-  Future<void> rotateRight() async {
-    await execute('export DISPLAY=:0; xdotool keydown ctrl+Right');
-    await Future.delayed(const Duration(milliseconds: 500));
-    await execute('export DISPLAY=:0; xdotool keyup ctrl+Right');
   }
 }
