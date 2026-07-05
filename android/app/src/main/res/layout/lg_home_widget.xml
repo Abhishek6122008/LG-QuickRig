@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Four generic slots; icon/label/color/click are bound at runtime by
+     LGHomeWidgetProvider from the user's chosen actions. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -8,114 +10,106 @@
     android:gravity="center_vertical">
 
     <LinearLayout
-        android:id="@+id/widget_btn_clean"
+        android:id="@+id/widget_btn_1"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
-        android:background="#1A00B5A3"
         android:layout_marginEnd="3dp"
         android:clickable="true"
         android:focusable="true">
 
         <TextView
+            android:id="@+id/widget_btn_1_icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="⌫"
-            android:textSize="18sp"
-            android:textColor="#FF00897B" />
+            android:textSize="18sp" />
 
         <TextView
+            android:id="@+id/widget_btn_1_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Clean"
             android:textSize="9sp"
             android:textColor="#B3000000"
             android:fontFamily="sans-serif-medium" />
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/widget_btn_relaunch"
+        android:id="@+id/widget_btn_2"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
-        android:background="#1A3D7EFF"
         android:layout_marginEnd="3dp"
         android:clickable="true"
         android:focusable="true">
 
         <TextView
+            android:id="@+id/widget_btn_2_icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="⟳"
-            android:textSize="18sp"
-            android:textColor="#FF2962FF" />
+            android:textSize="18sp" />
 
         <TextView
+            android:id="@+id/widget_btn_2_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Relaunch"
             android:textSize="9sp"
             android:textColor="#B3000000"
             android:fontFamily="sans-serif-medium" />
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/widget_btn_reboot"
+        android:id="@+id/widget_btn_3"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
-        android:background="#1AFF9500"
         android:layout_marginEnd="3dp"
         android:clickable="true"
         android:focusable="true">
 
         <TextView
+            android:id="@+id/widget_btn_3_icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="↺"
-            android:textSize="18sp"
-            android:textColor="#FFE07B00" />
+            android:textSize="18sp" />
 
         <TextView
+            android:id="@+id/widget_btn_3_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Reboot"
             android:textSize="9sp"
             android:textColor="#B3000000"
             android:fontFamily="sans-serif-medium" />
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/widget_btn_shutdown"
+        android:id="@+id/widget_btn_4"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
-        android:background="#1AFF3B30"
         android:clickable="true"
         android:focusable="true">
 
-        <ImageView
-            android:layout_width="18dp"
-            android:layout_height="18dp"
-            android:src="@drawable/ic_power"
-            android:contentDescription="Shutdown" />
-
         <TextView
+            android:id="@+id/widget_btn_4_icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Shutdown"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/widget_btn_4_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:textSize="9sp"
             android:textColor="#B3000000"
-            android:fontFamily="sans-serif-medium"
-            android:layout_marginTop="2dp" />
+            android:fontFamily="sans-serif-medium" />
     </LinearLayout>
 
 </LinearLayout>

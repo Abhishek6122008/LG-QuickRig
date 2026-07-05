@@ -12,7 +12,13 @@ void main() async {
 
   await ServiceLocator.setup();
 
-  if (Platform.isLinux) await LGTray().init();
+  if (Platform.isLinux) {
+    try {
+      await LGTray().init();
+    } catch (_) {
+      // No system tray on this desktop (e.g. stock GNOME) — run windowed only.
+    }
+  }
 
   runApp(const LGQuickRigApp());
 }

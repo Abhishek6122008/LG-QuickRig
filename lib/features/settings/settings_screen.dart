@@ -26,6 +26,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _saving = false;
   bool _obscurePassword = true;
 
+  // Saved password is never shown in the field; keep it so an edit that
+  // leaves the field blank doesn't wipe it.
+  String _savedPassword = '';
+
   @override
   void initState() {
     super.initState();
@@ -43,16 +47,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadSaved() async {
-    final creds = await _repo.load();
-    if (!mounted) return;
-    if (creds != null) {
-      _hostCtrl.text = creds.host;
-      _portCtrl.text = creds.port.toString();
-      _userCtrl.text = creds.username;
-      _nodeCtrl.text = creds.nodeCount.toString();
-
+    try {
+      final creds = await _repo.load();
+      if (!mounted) return;
+      if (creds != null) {
+        _hostCtrl.text = creds.host;
+        _portCtrl.text = creds.port.toString();
+        _userCtrl.text = creds.username;
+        _nodeCtrl.text = creds.nodeCount.toString();
+        _savedPassword = creds.password;
+      }
+    } catch (_) {
+      // Secure storage unavailable — start from defaults instead of
+      // spinning forever.
     }
-    setState(() => _loading = false);
+    if (mounted) setState(() => _loading = false);
   }
 
   Future<void> _save() async {
@@ -64,7 +73,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       host: _hostCtrl.text.trim(),
       port: int.parse(_portCtrl.text.trim()),
       username: _userCtrl.text.trim(),
-      password: _passCtrl.text,
+      password: _passCtrl.text.isEmpty ? _savedPassword : _passCtrl.text,
       nodeCount: int.parse(_nodeCtrl.text.trim()),
     );
 
@@ -173,7 +182,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     controller: _passCtrl,
                     decoration: InputDecoration(
                       labelText: 'Password',
-                      helperText: 'Stored in the platform secure enclave.',
+                      helperText:
+                          'Stored securely. Leave blank to keep the saved password.',
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(

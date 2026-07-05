@@ -131,6 +131,7 @@ class LGSSHClient {
       await session.done.timeout(timeout);
       await Future.wait([stdoutDone, stderrDone]);
     } on TimeoutException {
+      session.close();
       throw LGSSHException(
           'Command timed out after ${timeout.inSeconds}s: "$command"');
     } catch (e) {
@@ -158,6 +159,7 @@ class LGSSHClient {
       await file.write(Stream.value(Uint8List.fromList(bytes)));
     } finally {
       await file.close();
+      sftp.close();
     }
   }
 

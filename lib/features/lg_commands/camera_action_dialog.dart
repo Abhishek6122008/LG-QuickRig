@@ -43,6 +43,31 @@ class _CameraActionDialogState extends State<CameraActionDialog> {
     super.dispose();
   }
 
+  Future<void> _useCurrentView() async {
+    if (!_ssh.isConnected) {
+      setState(() => _error = 'Not connected to the LG rig.');
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    final target = await _orbit.currentTarget();
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      if (target == null) {
+        _error = 'Could not read the current view.';
+      } else {
+        _latCtrl.text = target.lat.toStringAsFixed(6);
+        _lngCtrl.text = target.lng.toStringAsFixed(6);
+        if (target.range != null) {
+          _rangeCtrl.text = target.range!.toStringAsFixed(0);
+        }
+      }
+    });
+  }
+
   Future<void> _run() async {
     final lat = double.tryParse(_latCtrl.text.trim());
     final lng = double.tryParse(_lngCtrl.text.trim());
@@ -68,7 +93,9 @@ class _CameraActionDialogState extends State<CameraActionDialog> {
         if (!started && mounted) {
           setState(() {
             _busy = false;
-            _error = 'Fly to a location first, or enter coordinates.';
+            _error = _orbit.isOrbitPlaying
+                ? 'An orbit is already running.'
+                : 'Could not read the current view — enter coordinates.';
           });
           return;
         }
@@ -120,6 +147,14 @@ class _CameraActionDialogState extends State<CameraActionDialog> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(
               labelText: 'Range (metres)',
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: _busy ? null : _useCurrentView,
+              icon: const Icon(Icons.my_location, size: 18),
+              label: const Text('Use current view'),
             ),
           ),
           if (_error != null)

@@ -19,6 +19,18 @@ class LGOrbitController {
 
   bool get isOrbitPlaying => _orbitPlaying;
 
+  /// Best-effort "where is the camera": the rig's query.txt first, then the
+  /// last position this app commanded. query.txt is empty on a fresh rig and
+  /// some LG setups consume it after Earth reads it — without the fallback
+  /// the "use current view" buttons dead-end on those rigs.
+  Future<({double lat, double lng, double? range})?> currentTarget() async {
+    final target = await _commandService.readCameraTarget();
+    if (target != null) return target;
+    final lat = _lastLat, lng = _lastLng;
+    if (lat == null || lng == null) return null;
+    return (lat: lat, lng: lng, range: _lastRange);
+  }
+
   Future<void> flyTo({
     required double lat,
     required double lng,
@@ -51,10 +63,18 @@ class LGOrbitController {
   }) async {
     if (_orbitPlaying) return false;
 
-    final orbitLat = lat ?? _lastLat;
-    final orbitLng = lng ?? _lastLng;
-    final orbitRange = range ?? _lastRange ?? 10000;
-    if (orbitLat == null || orbitLng == null) return false;
+    var orbitLat = lat ?? _lastLat;
+    var orbitLng = lng ?? _lastLng;
+    var orbitRange = range ?? _lastRange ?? 10000;
+
+    // Nothing flown from this app yet — orbit wherever the rig's camera is.
+    if (orbitLat == null || orbitLng == null) {
+      final target = await _commandService.readCameraTarget();
+      if (target == null) return false;
+      orbitLat = target.lat;
+      orbitLng = target.lng;
+      orbitRange = range ?? target.range ?? 10000;
+    }
 
     _orbitPlaying = true;
 

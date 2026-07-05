@@ -1,4 +1,7 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/ssh/ssh_credentials.dart';
 import '../../shared/widgets/connection_status_badge.dart';
@@ -14,6 +17,9 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  static const _commandsChannel =
+      MethodChannel('com.liqtech.lg_quickrig/commands');
+
   final _ctrl = DashboardController();
 
   @override
@@ -64,6 +70,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onBlankScreens: _ctrl.blankScreens,
                 onCleanKML: _ctrl.cleanKML,
                 onImageOverlay: () => ImageOverlayDialog.show(context),
+                onKmlTest: _ctrl.kmlTest,
               ),
               if (_ctrl.lastActionLabel != null) ...[
                 const SizedBox(height: 20),
@@ -105,6 +112,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: ConnectionStatusBadge(state: _ctrl.connectionState),
             ),
           ),
+        if (Platform.isAndroid)
+          IconButton(
+            icon: const Icon(Icons.widgets_outlined),
+            tooltip: 'Add widget to home screen',
+            onPressed: _showWidgetPicker,
+          ),
         IconButton(
           icon: const Icon(Icons.settings_outlined),
           tooltip: 'SSH Settings',
@@ -112,6 +125,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ],
     );
+  }
+
+  Future<void> _showWidgetPicker() async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.dashboard_customize_outlined),
+              title: const Text('Command Bar (4×1)'),
+              subtitle: const Text('Your 4 chosen actions — customize below'),
+              onTap: () => Navigator.pop(ctx, 'home'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.monitor_heart_outlined),
+              title: const Text('Live Status (2×2)'),
+              subtitle: const Text(
+                  'Connection status + your 3 chosen actions'),
+              onTap: () => Navigator.pop(ctx, 'status'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.tune),
+              title: const Text('Customize widget buttons'),
+              subtitle: const Text('Choose the actions both widgets show'),
+              onTap: () => Navigator.pop(ctx, 'customize'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (choice == null || !mounted) return;
+
+    if (choice == 'customize') {
+      await _WidgetButtonsDialog.show(context);
+      return;
+    }
+
+    var pinned = false;
+    try {
+      pinned = await _commandsChannel
+              .invokeMethod<bool>('pinWidget', {'widget': choice}) ??
+          false;
+    } catch (_) {}
+    if (!pinned && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(
+          'Launcher refused — long-press your home screen → Widgets → LG QuickRig.',
+        ),
+      ));
+    }
   }
 
   Future<void> _connect() => _ctrl.connect();
@@ -274,6 +339,7 @@ class _QuickActionsGrid extends StatelessWidget {
   final VoidCallback onBlankScreens;
   final VoidCallback onCleanKML;
   final VoidCallback onImageOverlay;
+  final VoidCallback onKmlTest;
 
   const _QuickActionsGrid({
     required this.ctrl,
@@ -284,6 +350,7 @@ class _QuickActionsGrid extends StatelessWidget {
     required this.onBlankScreens,
     required this.onCleanKML,
     required this.onImageOverlay,
+    required this.onKmlTest,
   });
 
   @override
@@ -329,10 +396,16 @@ class _QuickActionsGrid extends StatelessWidget {
         onTap: onCleanKML,
       ),
       _TileConfig(
-        label: 'Image Overlay',
+        label: 'Overlay',
         icon: Icons.add_photo_alternate_outlined,
         color: const Color(0xFF1A73E8),
         onTap: onImageOverlay,
+      ),
+      _TileConfig(
+        label: 'KML Test',
+        icon: Icons.science_outlined,
+        color: const Color(0xFF1E8E3E),
+        onTap: onKmlTest,
       ),
     ];
 
@@ -422,6 +495,147 @@ class _ActionTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Picks the four actions shown on the Command Bar home widget.
+/// Keys must match the action catalog in LGHomeWidgetProvider.kt.
+class _WidgetButtonsDialog extends StatefulWidget {
+  const _WidgetButtonsDialog();
+
+  static const _channel = MethodChannel('com.liqtech.lg_quickrig/commands');
+
+  static const actions = {
+    'clean': 'Clean KML',
+    'relaunch': 'Relaunch',
+    'reboot': 'Reboot',
+    'shutdown': 'Shutdown',
+    'sync': 'Sync',
+    'blank': 'Blank Screens',
+    'overlay': 'Image Overlay',
+    'flyto': 'Fly To',
+    'orbit': 'Orbit',
+    'pin': 'Drop Pin',
+  };
+
+  static Future<void> show(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (_) => const _WidgetButtonsDialog(),
+    );
+  }
+
+  @override
+  State<_WidgetButtonsDialog> createState() => _WidgetButtonsDialogState();
+}
+
+class _WidgetButtonsDialogState extends State<_WidgetButtonsDialog> {
+  List<String> _home = ['clean', 'relaunch', 'reboot', 'shutdown'];
+  List<String> _status = ['flyto', 'orbit', 'overlay'];
+  bool _loading = true;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final home = await _WidgetButtonsDialog._channel
+          .invokeListMethod<String>('getWidgetButtons', {'widget': 'home'});
+      if (home != null && home.length == 4) _home = List.of(home);
+      final status = await _WidgetButtonsDialog._channel
+          .invokeListMethod<String>('getWidgetButtons', {'widget': 'status'});
+      if (status != null && status.length == 3) _status = List.of(status);
+    } catch (_) {}
+    if (mounted) setState(() => _loading = false);
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    try {
+      await _WidgetButtonsDialog._channel.invokeMethod(
+          'saveWidgetButtons', {'widget': 'home', 'buttons': _home});
+      await _WidgetButtonsDialog._channel.invokeMethod(
+          'saveWidgetButtons', {'widget': 'status', 'buttons': _status});
+      if (mounted) Navigator.of(context).pop();
+    } catch (_) {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  List<Widget> _section(String title, List<String> keys) => [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+          ),
+        ),
+        ...List.generate(keys.length, (i) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: DropdownButtonFormField<String>(
+              initialValue: keys[i],
+              decoration: InputDecoration(
+                labelText: 'Button ${i + 1}',
+                border: const OutlineInputBorder(),
+                isDense: true,
+              ),
+              items: _WidgetButtonsDialog.actions.entries
+                  .map((e) => DropdownMenuItem(
+                        value: e.key,
+                        child: Text(e.value),
+                      ))
+                  .toList(),
+              onChanged:
+                  _saving ? null : (v) => setState(() => keys[i] = v!),
+            ),
+          );
+        }),
+      ];
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Widget buttons'),
+      content: _loading
+          ? const SizedBox(
+              height: 80,
+              child: Center(child: CircularProgressIndicator()),
+            )
+          : SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ..._section('Command Bar (4×1)', _home),
+                  const SizedBox(height: 8),
+                  ..._section('Live Status (2×2)', _status),
+                ],
+              ),
+            ),
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: (_loading || _saving) ? null : _save,
+          child: _saving
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Apply'),
+        ),
+      ],
     );
   }
 }

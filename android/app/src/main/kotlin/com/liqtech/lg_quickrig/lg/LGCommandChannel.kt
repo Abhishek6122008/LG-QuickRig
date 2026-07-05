@@ -1,6 +1,9 @@
 package com.liqtech.lg_quickrig.lg
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
+import android.os.Build
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.CoroutineScope
@@ -65,6 +68,40 @@ class LGCommandChannel(private val context: Context) {
                         LGCredentialStore.save(context, host, port, username, password, nodeCount)
                         withContext(Dispatchers.Main) { result.success(true) }
                     }
+                }
+
+                "getWidgetButtons" -> {
+                    val buttons = if (call.argument<String>("widget") == "status")
+                        LGStatusWidgetProvider.currentButtons(context)
+                    else
+                        LGHomeWidgetProvider.currentButtons(context)
+                    result.success(buttons)
+                }
+
+                "saveWidgetButtons" -> {
+                    val status = call.argument<String>("widget") == "status"
+                    val expected = if (status) 3 else 4
+                    val keys = call.argument<List<String>>("buttons")
+                    if (keys == null || keys.size != expected) {
+                        result.error("INVALID_ARG", "'buttons' must be $expected keys.", null)
+                        return@setMethodCallHandler
+                    }
+                    if (status) LGStatusWidgetProvider.saveButtons(context, keys)
+                    else LGHomeWidgetProvider.saveButtons(context, keys)
+                    result.success(true)
+                }
+
+                "pinWidget" -> {
+                    val provider = when (call.argument<String>("widget")) {
+                        "status" -> LGStatusWidgetProvider::class.java
+                        else     -> LGHomeWidgetProvider::class.java
+                    }
+                    val manager = AppWidgetManager.getInstance(context)
+                    val ok = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                            manager.isRequestPinAppWidgetSupported &&
+                            manager.requestPinAppWidget(
+                                ComponentName(context, provider), null, null)
+                    result.success(ok)
                 }
 
                 "clearCredentials" -> {

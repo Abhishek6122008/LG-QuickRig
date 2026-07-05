@@ -8,15 +8,23 @@ class LGKMLController {
 
   LGKMLController(this._commandService);
 
-  Future<void> sendKML(String kml) async {
+  /// Writes the KML into a numbered slot and registers it in kmls.txt.
+  /// Separate slots let a ground overlay and a dropped pin coexist;
+  /// cleanKML wipes every lgquickrig_* slot.
+  Future<void> sendKML(String kml, {int slot = 1}) async {
     final escaped = _shellEscape(kml);
     await _commandService.execute(
-      "echo '$escaped' > $_kmlDir/lgquickrig_1.kml",
+      "echo '$escaped' > $_kmlDir/lgquickrig_$slot.kml",
     );
+    await addKMLReference('http://$_host/kml/lgquickrig_$slot.kml');
   }
 
   Future<void> addKMLReference(String url) async {
-    await _commandService.execute("echo '$url' >> $_kmlsFile");
+    // Append only if not already listed — repeated overlays would otherwise
+    // pile up duplicate entries in kmls.txt.
+    await _commandService.execute(
+      "grep -qxF '$url' $_kmlsFile 2>/dev/null || echo '$url' >> $_kmlsFile",
+    );
   }
 
   Future<void> cleanKML() async {
@@ -52,7 +60,30 @@ class LGKMLController {
 
     await _commandService.uploadFile(imageBytes, '/var/www/html/$imageName');
     await sendKML(kml);
-    await addKMLReference('http://$_host/kml/lgquickrig_1.kml');
+  }
+
+  /// Drops a tinted Placemark. With no [iconHref] it uses the built-in
+  /// pushpin, which renders even on rigs without internet access; an
+  /// [iconHref] (e.g. the mapfiles flag/target icons) needs the rig online.
+  /// [kmlColor] is KML aabbggrr, e.g. ff0000ff = red.
+  Future<void> dropPin({
+    required double lat,
+    required double lng,
+    String name = 'QuickRig Pin',
+    String kmlColor = 'ff0000ff',
+    String? iconHref,
+  }) async {
+    final icon = iconHref != null ? '<Icon><href>$iconHref</href></Icon>' : '';
+    final kml = '<?xml version="1.0" encoding="UTF-8"?>'
+        '<kml xmlns="http://www.opengis.net/kml/2.2">'
+        '<Placemark>'
+        '<name>$name</name>'
+        '<Style><IconStyle>'
+        '<color>$kmlColor</color><scale>1.4</scale>$icon'
+        '</IconStyle></Style>'
+        '<Point><coordinates>$lng,$lat,0</coordinates></Point>'
+        '</Placemark></kml>';
+    await sendKML(kml, slot: 2);
   }
 
   String get _host => _commandService.host;

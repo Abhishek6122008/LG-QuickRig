@@ -59,7 +59,7 @@
         android:orientation="horizontal">
 
         <LinearLayout
-            android:id="@+id/status_btn_flyto"
+            android:id="@+id/status_btn_1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -73,6 +73,7 @@
             android:focusable="true">
 
             <TextView
+                android:id="@+id/status_btn_1_icon"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="◎"
@@ -80,6 +81,7 @@
                 android:textColor="#FF00897B" />
 
             <TextView
+                android:id="@+id/status_btn_1_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Fly To"
@@ -89,7 +91,7 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/status_btn_orbit"
+            android:id="@+id/status_btn_2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -98,10 +100,12 @@
             android:background="#1A3D7EFF"
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
+            android:layout_marginEnd="4dp"
             android:clickable="true"
             android:focusable="true">
 
             <TextView
+                android:id="@+id/status_btn_2_icon"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="⟲"
@@ -109,9 +113,41 @@
                 android:textColor="#FF2962FF" />
 
             <TextView
+                android:id="@+id/status_btn_2_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Orbit"
+                android:textSize="9sp"
+                android:textColor="#B3000000"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/status_btn_3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="#1A9334E6"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:id="@+id/status_btn_3_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="▣"
+                android:textSize="16sp"
+                android:textColor="#FF9334E6" />
+
+            <TextView
+                android:id="@+id/status_btn_3_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Overlay"
                 android:textSize="9sp"
                 android:textColor="#B3000000"
                 android:fontFamily="sans-serif-medium" />
