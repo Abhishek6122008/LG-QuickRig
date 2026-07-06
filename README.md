@@ -32,10 +32,10 @@
 
 <table>
 <tr>
-<td align="center"><b>2 / 8</b><br/><sub>Weeks done</sub></td>
-<td align="center"><b>4</b><br/><sub>Flutter screens</sub></td>
-<td align="center"><b>6</b><br/><sub>Kotlin files</sub></td>
-<td align="center"><b>3</b><br/><sub>Android surfaces</sub></td>
+<td align="center"><b>4 / 8</b><br/><sub>Weeks done</sub></td>
+<td align="center"><b>2</b><br/><sub>Platforms</sub></td>
+<td align="center"><b>8</b><br/><sub>Kotlin files</sub></td>
+<td align="center"><b>4</b><br/><sub>Android surfaces</sub></td>
 <td align="center"><b>0</b><br/><sub>Plaintext secrets</sub></td>
 </tr>
 </table>
@@ -52,11 +52,13 @@
 
 **LG QuickRig** removes that entirely.
 
-- **One tap from your home screen** — a 4x1 Android widget puts Reboot, Sync, Shutdown, and Blank Screens on your launcher, no app open required
-- **Live Status widget** — a 2x2 widget with a colour-coded dot showing whether the rig is online, auto-refreshed every 5 minutes
+- **One tap from your home screen** — a customizable 4x1 Command Bar widget: pick any 4 of 10 rig actions, no app open required
+- **Live Status widget** — a 2x2 widget with a colour-coded dot (auto-refreshed every 5 minutes) plus 3 customizable action buttons
 - **Quick Settings tile** — toggle connectivity straight from the system shade, with a live SSH ping confirming reachability
-- **Full companion app** — Dashboard, LG Commands panel, SSH Console, and Settings, all wired to a shared SSH session that persists across screens
-- **Coming:** AI voice commands, Gemini-powered log monitoring, and a Linux desktop build
+- **Camera control on the rig** — Fly To, Orbit, image overlays, colour-coded map markers, and a one-tap KML Test that proves the whole pipeline
+- **Floating widget dialogs** — widget buttons open a translucent dialog over the launcher; the full app never has to come forward
+- **Linux system tray** — full menu of rig actions, live status icon (green/red), and the camera dialogs, no window needed
+- **Coming:** a **Gemini Copilot** — a floating, screen-context-aware assistant: "fly to Rome, pin it and orbit" in plain language, connection diagnosis, and location content as balloons on the rig
 
 > The goal is a zero-friction rig operator's tool. If it takes more than one tap, it's too many.
 
@@ -68,35 +70,35 @@
 
 <div align="center">
 
-*Dark teal · Material 3 · Dashboard + LG Commands*
+*Material 3 · Dashboard + Overlay dialog (images, pins & markers)*
 
 </div>
 
 ```
 ╔═══════════════════════════════════════════╗   ╔═══════════════════════════════════════════╗
-║  LG QuickRig          Connected           ║   ║  LG Commands             Connected        ║
+║  LG QuickRig          Connected           ║   ║  Overlay                                  ║
 ╠═══════════════════════════════════════════╣   ╠═══════════════════════════════════════════╣
-║                                           ║   ║  ┌─────────────────────────────────────┐  ║
-║  ┌─────────────────────────────────────┐  ║   ║  │    Connected — ready to send cmds   │  ║
-║  │ Connection                          │  ║   ║  └─────────────────────────────────────┘  ║
+║                                           ║   ║                                           ║
+║  ┌─────────────────────────────────────┐  ║   ║  (Image) (Red Pin) (Yellow Pin)           ║
+║  │ Connection                          │  ║   ║  (Green Pin) (Blue Pin) (Flag) (Target)   ║
 ║  │ lg@192.168.2.2  ·  3 nodes          │  ║   ║                                           ║
-║  │ ┌─────────────────────────────────┐ │  ║   ║  Commands                                 ║
-║  │ │           Disconnect            │ │  ║   ║  ┌───────────────┐  ┌───────────────────┐ ║
-║  └─────────────────────────────────────┘  ║   ║  │     Reboot    │  │     Shutdown      │ ║
-║                                           ║   ║  └───────────────┘  └───────────────────┘ ║
-║  Quick Actions                            ║   ║  ┌───────────────┐  ┌───────────────────┐ ║
-║  ┌───────────────┐  ┌───────────────────┐ ║   ║  │     Sync      │  │    Restart Slaves │ ║
-║  │     Reboot    │  │     Restart Svcs  │ ║   ║  └───────────────┘  └───────────────────┘ ║
-║  └───────────────┘  └───────────────────┘ ║   ║  ┌───────────────┐                        ║
-║  ┌───────────────┐  ┌───────────────────┐ ║   ║  │   Blank Scrn  │                        ║
-║  │     Shutdown  │  │     Sync          │ ║   ║  └───────────────┘                        ║
+║  │ ┌─────────────────────────────────┐ │  ║   ║  ┌─────────────────────────────────────┐  ║
+║  │ │           Disconnect            │ │  ║   ║  │             Pick image              │  ║
+║  └─────────────────────────────────────┘  ║   ║  └─────────────────────────────────────┘  ║
+║                                           ║   ║                                           ║
+║  Quick Actions                            ║   ║  Latitude     blank = current view        ║
+║  ┌───────────────┐  ┌───────────────────┐ ║   ║  Longitude    blank = current view        ║
+║  │     Reboot    │  │  Restart Services │ ║   ║  Size (km)    1                           ║
 ║  └───────────────┘  └───────────────────┘ ║   ║                                           ║
-║  ┌───────────────┐  ┌───────────────────┐ ║   ║  Output                         [Clear]   ║
-║  │   Blank Scrn  │  │     Clean KML     │ ║   ║  ┌─────────────────────────────────────┐  ║
-║  └───────────────┘  └───────────────────┘ ║   ║  │ 14:32:01 [OUT] Running: Sync...     │  ║
-║  ┌───────────────┐  ┌───────────────────┐ ║   ║  │ 14:32:02 [OUT] Sync completed.      │  ║
-║  │     LG Cmds   │  │  SSH Console      │ ║   ║  └─────────────────────────────────────┘  ║
-║  └───────────────┘  └───────────────────┘ ║   ╚═══════════════════════════════════════════╝
+║  ┌───────────────┐  ┌───────────────────┐ ║   ║                   ⌖ Use current view      ║
+║  │    Shutdown   │  │       Sync        │ ║   ║                                           ║
+║  └───────────────┘  └───────────────────┘ ║   ║                   Cancel      [ Send ]    ║
+║  ┌───────────────┐  ┌───────────────────┐ ║   ╚═══════════════════════════════════════════╝
+║  │   Blank Scrn  │  │     Clean KML     │ ║
+║  └───────────────┘  └───────────────────┘ ║
+║  ┌───────────────┐  ┌───────────────────┐ ║
+║  │    Overlay    │  │     KML Test      │ ║
+║  └───────────────┘  └───────────────────┘ ║
 ╚═══════════════════════════════════════════╝
 ```
 
@@ -118,14 +120,19 @@
 ╔══════════════════════╗
 ║  LG QuickRig         ║
 ║                      ║
-║       (green)        ║
-║      Connected       ║
-║     192.168.2.2      ║
-║    Updated 14:32     ║
+║  (green) Connected   ║
+║          192.168.2.2 ║
+║                      ║
+║  ┌─────┬─────┬─────┐ ║
+║  │FlyTo│Orbit│Ovrly│ ║
+║  └─────┴─────┴─────┘ ║
 ║                      ║
 ║  Live Status  (2x2)  ║
 ╚══════════════════════╝
 ```
+
+Both widgets are customizable in-app — the Command Bar's 4 slots and the Live
+Status widget's 3 action buttons each accept any of the 10 catalog actions.
 
 <br/>
 
@@ -135,7 +142,7 @@
 
 <div align="center">
 
-`Progress ████████░░░░░░░░░░░░░░░░░░░░░░░░  2 of 8 weeks  (week 3 in progress)`
+`Progress ████████████████░░░░░░░░░░░░░░░░  4 of 8 weeks  (week 5 in progress)`
 
 </div>
 
@@ -143,13 +150,13 @@
 
 | | Week | Focus | Deliverables |
 |:---:|:---:|:---|:---|
-| ✅ | **1** | **SSH Foundation** | `LGSSHClient` · `LGCommandService` · secure credential storage · Dashboard · LG Commands · SSH Console |
+| ✅ | **1** | **SSH Foundation** | `LGSSHClient` · `LGCommandService` · secure credential storage · Dashboard |
 | ✅ | **2** | **Android Widgets + Platform Channels** | `LGCommandChannel.kt` · `LGCredentialStore.kt` · `LGSshExecutor.kt` (JSch) · Command Bar widget (4x1) · Quick Settings tile |
-| - | **3** | **Live Status Widget** | In progress — `LGStatusWidgetProvider.kt` · 2x2 status widget · green/red ping indicator · 5-min auto-refresh |
-| 🔜 | **4** | **Linux Desktop Build** | `linux/` runner · desktop UI polish · Debian/Ubuntu packaging |
-| 🔜 | **5** | **AI Voice Commands** | Speech-to-SSH pipeline · Gemini API wiring · natural-language cluster control |
-| 🔜 | **6** | **Log Monitoring + Anomaly Detection** | Gemini-powered SSH log analysis · anomaly alerts |
-| 🔜 | **7** | **Testing + Polish** | Unit · integration · widget tests · UI refinements |
+| ✅ | **3** | **Live Status Widget + Rig Camera Control** | `LGStatusWidgetProvider.kt` · 2x2 status widget · 5-min auto-refresh · Fly To / Orbit / Overlay dialogs · floating `CameraDialogActivity` |
+| ✅ | **4** | **Linux Desktop + KML Features** | `linux/` runner · system tray · image overlays · map markers · KML Test · widget customization for both widgets |
+| - | **5** | **Gemini Copilot — Core** | In progress — floating FAB + chat sheet · context snapshot · function-calling dispatcher onto existing services |
+| 🔜 | **6** | **Gemini Copilot — Doctor + Content** | Connection diagnosis from real errors · location content as balloons on the rig |
+| 🔜 | **7** | **Testing + Polish** | Unit · integration · widget tests · Debian/Ubuntu packaging |
 | 🔜 | **8** | **Docs + Submission** | Final docs · demo video · submission-ready release |
 
 <br/>
@@ -165,13 +172,14 @@ lg_quickrig/
 │   ├── AndroidManifest.xml
 │   ├── kotlin/com/liqtech/lg_quickrig/
 │   │   ├── MainActivity.kt
+│   │   ├── CameraDialogActivity.kt       ← translucent task: widget dialogs float over the launcher
 │   │   └── lg/
 │   │       ├── LGCommandChannel.kt       ← MethodChannel bridge: Dart <-> Kotlin
 │   │       ├── LGCredentialStore.kt      ← reads EncryptedSharedPreferences (same store as Dart)
 │   │       ├── LGSshExecutor.kt          ← JSch SSH client for widget/tile use
-│   │       ├── LGHomeWidgetProvider.kt   ← Command Bar widget (4x1)
+│   │       ├── LGHomeWidgetProvider.kt   ← Command Bar widget (4x1) + shared action catalog
 │   │       ├── LGQuickSettingsTile.kt    ← Quick Settings tile
-│   │       └── LGStatusWidgetProvider.kt ← Live Status widget (2x2)
+│   │       └── LGStatusWidgetProvider.kt ← Live Status widget (2x2, customizable buttons)
 │   └── res/
 │       ├── layout/
 │       │   ├── lg_home_widget.xml
@@ -187,7 +195,7 @@ lg_quickrig/
 │
 ├── lib/
 │   ├── main.dart
-│   ├── app.dart
+│   ├── app.dart                          ← routes widget intents to the right dialog
 │   ├── core/
 │   │   ├── constants.dart
 │   │   ├── di/service_locator.dart
@@ -198,24 +206,24 @@ lg_quickrig/
 │   ├── data/repositories/
 │   │   └── credentials_repository.dart
 │   ├── services/
-│   │   ├── lg_command_service.dart
-│   │   ├── lg_kml_controller.dart
-│   │   ├── lg_orbit_controller.dart
-│   │   └── lg_tour_controller.dart
+│   │   ├── lg_command_service.dart       ← SSH commands + camera-target readback
+│   │   ├── lg_kml_controller.dart        ← KML slots, overlays, pins/markers, clean
+│   │   └── lg_orbit_controller.dart      ← flyTo, orbit, currentTarget fallback
 │   ├── features/
 │   │   ├── dashboard/
 │   │   │   ├── dashboard_controller.dart
-│   │   │   └── dashboard_screen.dart
+│   │   │   └── dashboard_screen.dart     ← quick actions + widget customization dialog
 │   │   ├── lg_commands/
-│   │   │   ├── lg_commands_controller.dart
-│   │   │   └── lg_commands_screen.dart
-│   │   ├── ssh_test/
-│   │   │   ├── ssh_test_controller.dart
-│   │   │   └── ssh_test_screen.dart
+│   │   │   ├── camera_action_dialog.dart ← Fly To / Orbit
+│   │   │   └── image_overlay_dialog.dart ← image overlays + pins & markers
 │   │   └── settings/
 │   │       └── settings_screen.dart
-│   └── shared/widgets/
-│       └── connection_status_badge.dart
+│   ├── shared/widgets/
+│   │   └── connection_status_badge.dart
+│   └── tray/
+│       └── lg_tray.dart                  ← Linux system tray (tray_manager)
+│
+├── linux/                                ← Flutter Linux runner
 │
 └── test/
     └── widget_test.dart
@@ -239,7 +247,8 @@ lg_quickrig/
 | ![Security](https://img.shields.io/badge/-AES--256--GCM-E63946?logo=keepassxc&logoColor=white) | **flutter\_secure\_storage ^9.2** | Hardware-backed encryption via Keystore / Keychain / libsecret |
 | ![DI](https://img.shields.io/badge/-GetIt-FF9F1C) | **get\_it ^8.0** | Zero-codegen service locator — resolve anywhere, no BuildContext |
 | ![State](https://img.shields.io/badge/-ChangeNotifier-00B4D8) | **ChangeNotifier** | Reactive UI without extra state management packages |
-| ![Gemini](https://img.shields.io/badge/-Gemini_API-4285F4?logo=google&logoColor=white) | **Gemini API** | *(Week 5+)* Voice commands, log analysis, anomaly detection |
+| ![Tray](https://img.shields.io/badge/-tray__manager-FCC624?logo=linux&logoColor=black) | **tray\_manager ^0.2** | Linux system tray — rig actions without opening the window |
+| ![Gemini](https://img.shields.io/badge/-Gemini_API-4285F4?logo=google&logoColor=white) | **Gemini API** | *(Week 5+)* Copilot: natural-language rig control, connection doctor, content balloons |
 
 </div>
 
@@ -288,6 +297,8 @@ flutter run -d linux   # Linux desktop window
 **To add the Live Status widget:** same widget picker → drag a 2x2 slot.
 
 **To add the Quick Settings tile:** pull down the shade → edit tiles → add *LG QuickRig*.
+
+**To customize widget buttons:** in the app, tap the widgets icon in the app bar → *Customize widget buttons* — both the Command Bar's 4 slots and the Live Status widget's 3 buttons.
 
 <br/>
 

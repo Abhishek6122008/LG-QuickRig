@@ -17,6 +17,26 @@ class LGCommandService {
   Future<void> uploadFile(List<int> bytes, String remotePath) =>
       _client.uploadBytes(bytes, remotePath);
 
+  /// Last camera target commanded on the rig — every controller app drives
+  /// Earth by writing a flytoview LookAt/Camera to /tmp/query.txt on the
+  /// master, so this is "where the camera is" for command-driven movement.
+  /// ponytail: blind to SpaceNav/mouse moves — capture ViewSync UDP on a
+  /// slave if that ever matters.
+  Future<({double lat, double lng, double? range})?> readCameraTarget() async {
+    try {
+      final xml = await execute('cat /tmp/query.txt 2>/dev/null');
+      final lat = _tagValue(xml, 'latitude');
+      final lng = _tagValue(xml, 'longitude');
+      if (lat == null || lng == null) return null;
+      return (lat: lat, lng: lng, range: _tagValue(xml, 'range'));
+    } on LGSSHException {
+      return null;
+    }
+  }
+
+  double? _tagValue(String xml, String tag) => double.tryParse(
+      RegExp('<$tag>([^<]*)</$tag>').firstMatch(xml)?.group(1) ?? '');
+
   Future<String> executeOnSlave(int node, String command) {
     assert(
       node >= 2 && node <= nodeCount,
@@ -25,11 +45,14 @@ class LGCommandService {
     final pass = _client.credentials?.password ?? 'lg';
 
     final safePass = pass.replaceAll("'", r"'\''");
+    // Escape the command for its own single-quote wrapper — inner quotes
+    // (e.g. around the sudo password) would otherwise terminate it early.
+    final safeCmd = command.replaceAll("'", r"'\''");
     return execute(
       "sshpass -p '$safePass' ssh -t "
       "-o StrictHostKeyChecking=no "
       "-o ConnectTimeout=5 "
-      "lg@lg$node '$command' 2>/dev/null",
+      "lg@lg$node '$safeCmd' 2>/dev/null",
     );
   }
 

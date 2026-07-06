@@ -117,3 +117,13 @@ obj/
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 
 # End of https://www.toptal.com/developers/gitignore/api/flutter
+
+# JVM crash dumps and stray logs
+*.log
+replay_pid*
+
+# Kotlin build session cache
+android/.kotlin/
+
+# Local planning docs, not for the repo
+docs/

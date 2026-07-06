@@ -27,6 +27,22 @@
             </intent-filter>
         </activity>
 
+        <!-- ── Dialog-only launcher for widget camera buttons ────────────── -->
+        <!--
+            Separate task + translucent window: the Fly To / Orbit / Overlay /
+            Pin dialogs float over the launcher without opening the full app.
+        -->
+        <activity
+            android:name=".CameraDialogActivity"
+            android:exported="false"
+            android:taskAffinity="com.liqtech.lg_quickrig.dialog"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@style/TransparentTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize" />
+
         <!-- ── Command Bar home screen widget (4×1) ──────────────────────── -->
         <!--
             android:exported="true" is required on API 31+ for receivers that
@@ -43,6 +59,8 @@
                 <action android:name="com.liqtech.lg_quickrig.ACTION_RELAUNCH" />
                 <action android:name="com.liqtech.lg_quickrig.ACTION_REBOOT" />
                 <action android:name="com.liqtech.lg_quickrig.ACTION_SHUTDOWN" />
+                <action android:name="com.liqtech.lg_quickrig.ACTION_SYNC" />
+                <action android:name="com.liqtech.lg_quickrig.ACTION_BLANK" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

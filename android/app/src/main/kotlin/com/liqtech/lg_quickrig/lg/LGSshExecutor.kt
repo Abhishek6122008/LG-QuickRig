@@ -8,7 +8,10 @@ import kotlinx.coroutines.withContext
 object LGSshExecutor {
 
     private const val CONNECT_TIMEOUT_MS = 10_000
-    private const val EXEC_TIMEOUT_MS   = 15_000
+
+    // Reboot/shutdown fan out to every slave with a 5s connect timeout each,
+    // so the budget must cover an unreachable rig, not a single command.
+    private const val EXEC_TIMEOUT_MS   = 30_000
 
     suspend fun execute(
         creds: LGCredentials,
@@ -61,15 +64,36 @@ object LGSshExecutor {
         }.isSuccess
     }
 
-    fun rebootCmd(password: String) =
-        "echo '${shellEscape(password)}' | sudo -S reboot"
+    fun rebootCmd(password: String, nodeCount: Int) =
+        fanOutSudoCmd("sudo -S reboot", password, nodeCount)
 
-    fun shutdownCmd(password: String) =
-        "echo '${shellEscape(password)}' | sudo -S shutdown -h now"
+    fun shutdownCmd(password: String, nodeCount: Int) =
+        fanOutSudoCmd("sudo -S shutdown -h now", password, nodeCount)
+
+    /**
+     * Runs `echo 'password' | sudoCmd` on every slave (lgN..lg2, hopping
+     * through the master with sshpass) and finally on the master itself —
+     * mirrors LGCommandService.reboot/shutdown on the Dart side.
+     */
+    private fun fanOutSudoCmd(sudoCmd: String, password: String, nodeCount: Int): String {
+        val p = shellEscape(password)
+        val remote = "echo '$p' | $sudoCmd"
+        val sb = StringBuilder()
+        for (i in nodeCount downTo 2) {
+            sb.append(
+                "sshpass -p '$p' ssh -t -o StrictHostKeyChecking=no -o ConnectTimeout=5 " +
+                "lg@lg$i '${remote.replace("'", "'\\''")}' 2>/dev/null; "
+            )
+        }
+        sb.append(remote)
+        return sb.toString()
+    }
 
     val syncCmd =
-        "~/bin/lg-sync 2>/dev/null || ~/scripts/lg-sync 2>/dev/null || echo 'sync not found'"
+        "~/scripts/lg-sync 2>/dev/null || ~/bin/lg-sync 2>/dev/null || echo 'sync not found'"
 
+    // ponytail: blanks the master playlist only; the app's Blank Screens
+    // also clears each slave_N.kml — add the fan-out here if anyone notices.
     val blankCmd = "echo '' > /var/www/html/kmls.txt"
 
     val cleanCmd =

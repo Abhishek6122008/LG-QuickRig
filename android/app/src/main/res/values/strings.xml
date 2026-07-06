@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">LG QuickRig</string>
-    <string name="widget_description">One-tap Reboot, Sync, Shutdown, and Blank Screens for your Liquid Galaxy cluster.</string>
+    <string name="widget_description">One-tap Liquid Galaxy actions — pick your four buttons in the app.</string>
     <string name="qs_tile_label">LG QuickRig</string>
     <string name="status_widget_description">Live online/offline status of the Liquid Galaxy rig, auto-refreshed every 5 minutes.</string>
 </resources>

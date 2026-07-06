@@ -10,7 +10,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.SystemClock
 import android.widget.RemoteViews
-import com.liqtech.lg_quickrig.MainActivity
+import com.liqtech.lg_quickrig.CameraDialogActivity
 import com.liqtech.lg_quickrig.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,9 +25,33 @@ class LGStatusWidgetProvider : AppWidgetProvider() {
         // Extra read by MainActivity to open a camera-control dialog on launch.
         const val EXTRA_CAMERA_ACTION = "lg_camera_action"
 
-        private const val RC_ALARM = 20
-        private const val RC_FLYTO = 24
-        private const val RC_ORBIT = 25
+        private const val RC_ALARM    = 20
+        private const val RC_BTN_BASE = 24
+
+        private const val PREFS_NAME      = "LGQuickRigWidgetPrefs"
+        private const val KEY_BUTTONS     = "status_buttons"
+        private const val DEFAULT_BUTTONS = "flyto,orbit,overlay"
+
+        private val CELLS = listOf(
+            Triple(R.id.status_btn_1, R.id.status_btn_1_icon, R.id.status_btn_1_label),
+            Triple(R.id.status_btn_2, R.id.status_btn_2_icon, R.id.status_btn_2_label),
+            Triple(R.id.status_btn_3, R.id.status_btn_3_icon, R.id.status_btn_3_label),
+        )
+
+        fun currentButtons(context: Context): List<String> =
+            (context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getString(KEY_BUTTONS, DEFAULT_BUTTONS) ?: DEFAULT_BUTTONS)
+                .split(',')
+
+        fun saveButtons(context: Context, keys: List<String>) {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+                .putString(KEY_BUTTONS, keys.joinToString(","))
+                .apply()
+            // Re-render through the provider's own refresh path.
+            context.sendBroadcast(
+                Intent(context, LGStatusWidgetProvider::class.java)
+                    .apply { action = ACTION_REFRESH })
+        }
 
         private fun refreshIntent(context: Context): PendingIntent {
             val intent = Intent(context, LGStatusWidgetProvider::class.java).apply {
@@ -38,9 +62,12 @@ class LGStatusWidgetProvider : AppWidgetProvider() {
             return PendingIntent.getBroadcast(context, RC_ALARM, intent, flags)
         }
 
-        /** Opens the app to a camera-control dialog (Fly To / Orbit). */
-        private fun appIntent(context: Context, cameraAction: String, requestCode: Int): PendingIntent {
-            val intent = Intent(context, MainActivity::class.java).apply {
+        /** Shows a floating dialog (Fly To / Orbit / Overlay / Pin) over the
+         *  launcher — CameraDialogActivity runs in its own translucent task,
+         *  so the main app never comes forward.
+         *  Shared with LGHomeWidgetProvider for its dialog buttons. */
+        fun appIntent(context: Context, cameraAction: String, requestCode: Int): PendingIntent {
+            val intent = Intent(context, CameraDialogActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                 putExtra(EXTRA_CAMERA_ACTION, cameraAction)
             }
@@ -137,9 +164,17 @@ class LGStatusWidgetProvider : AppWidgetProvider() {
             val ids     = manager.getAppWidgetIds(ComponentName(context, LGStatusWidgetProvider::class.java))
             if (ids.isEmpty()) return@withContext
             val views = RemoteViews(context.packageName, R.layout.lg_status_widget)
-            views.setOnClickPendingIntent(R.id.status_header,    refreshIntent(context))
-            views.setOnClickPendingIntent(R.id.status_btn_flyto, appIntent(context, "flyto", RC_FLYTO))
-            views.setOnClickPendingIntent(R.id.status_btn_orbit, appIntent(context, "orbit", RC_ORBIT))
+            views.setOnClickPendingIntent(R.id.status_header, refreshIntent(context))
+            currentButtons(context).take(3).forEachIndexed { i, key ->
+                val action = LGHomeWidgetProvider.actionFor(key) ?: return@forEachIndexed
+                val (cell, icon, label) = CELLS[i]
+                views.setTextViewText(icon, action.symbol)
+                views.setTextColor(icon, action.textColor)
+                views.setTextViewText(label, action.label)
+                views.setInt(cell, "setBackgroundColor", action.bgColor)
+                views.setOnClickPendingIntent(cell,
+                    LGHomeWidgetProvider.clickIntent(context, action, RC_BTN_BASE + i))
+            }
             block(views)
             for (id in ids) manager.updateAppWidget(id, views)
         }

@@ -10,13 +10,17 @@ import io.flutter.plugin.common.MethodChannel
 import com.liqtech.lg_quickrig.lg.LGCommandChannel
 import com.liqtech.lg_quickrig.lg.LGStatusWidgetProvider
 
-class MainActivity : FlutterActivity() {
+open class MainActivity : FlutterActivity() {
 
     private var pendingCameraAction: String? = null
     private var channel: MethodChannel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         pendingCameraAction = intent?.getStringExtra(LGStatusWidgetProvider.EXTRA_CAMERA_ACTION)
+        // Consume the extra: Android redelivers the task's intent on every
+        // recreate, and a stale camera action would relaunch the app in
+        // dialog-only mode, whose close handler sends the app to background.
+        intent?.removeExtra(LGStatusWidgetProvider.EXTRA_CAMERA_ACTION)
 
         // When launched purely for a camera dialog, make the window translucent
         // so the dialog appears to float over the launcher instead of showing
@@ -43,6 +47,7 @@ class MainActivity : FlutterActivity() {
         intent.getStringExtra(LGStatusWidgetProvider.EXTRA_CAMERA_ACTION)?.let {
             channel?.invokeMethod("openCamera", it)
         }
+        intent.removeExtra(LGStatusWidgetProvider.EXTRA_CAMERA_ACTION)
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
