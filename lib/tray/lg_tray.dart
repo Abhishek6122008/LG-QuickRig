@@ -22,9 +22,12 @@ class LGTray with TrayListener {
     // tray_manager only dispatches menu onClick callbacks while at least one
     // TrayListener is registered — without this, every menu click is a no-op.
     trayManager.addListener(this);
-    await _applyState(_ssh.state);
-    await _buildMenu();
 
+    // Menu and state listener come FIRST: if a cosmetic call below throws
+    // (tooltips aren't supported on every Linux tray), the menu must already
+    // be attached or every click is dead and the icon freezes on its first
+    // state forever.
+    await _buildMenu();
     _ssh.stateStream.listen(_applyState);
 
     // The state stream only fires on explicit connects/disconnects and
@@ -38,6 +41,8 @@ class LGTray with TrayListener {
         // The failed command already flipped the state stream to disconnected.
       }
     });
+
+    await _applyState(_ssh.state);
   }
 
   Future<void> _applyState(SSHConnectionState state) async {
@@ -52,16 +57,22 @@ class LGTray with TrayListener {
       SSHConnectionState.disconnected => 'Disconnected',
       _ => 'Connecting…',
     };
-    await trayManager.setIcon(_assetPath(icon));
-    await trayManager.setToolTip('LG QuickRig — $label');
+    try {
+      await trayManager.setIcon(_assetPath(icon));
+      await trayManager.setToolTip('LG QuickRig — $label');
+    } catch (_) {
+      // Icon/tooltip are cosmetic — never let them break the menu.
+    }
   }
 
   /// `flutter run` serves assets relative to the project dir; a bundled
   /// release keeps them under `<exe>/data/flutter_assets`. The tray needs a
   /// path that exists on disk either way.
   String _assetPath(String name) {
-    final local = 'assets/$name';
-    if (File(local).existsSync()) return local;
+    final local = File('assets/$name');
+    // Absolute path either way — appindicator resolves relative paths
+    // against the icon theme, not the working directory.
+    if (local.existsSync()) return local.absolute.path;
     final exeDir = File(Platform.resolvedExecutable).parent.path;
     return '$exeDir/data/flutter_assets/assets/$name';
   }
