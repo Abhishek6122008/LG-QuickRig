@@ -6,6 +6,10 @@ class LGKMLController {
   static const _kmlDir = '/var/www/html/kml';
   static const _kmlsFile = '/var/www/html/kmls.txt';
 
+  // The LG image serves /var/www/html on port 81, not 80 — port-80 URLs
+  // land in kmls.txt but Earth can never fetch them, so nothing renders.
+  static const _webPort = 81;
+
   LGKMLController(this._commandService);
 
   /// Writes the KML into a numbered slot and registers it in kmls.txt.
@@ -16,7 +20,7 @@ class LGKMLController {
     await _commandService.execute(
       "echo '$escaped' > $_kmlDir/lgquickrig_$slot.kml",
     );
-    await addKMLReference('http://$_host/kml/lgquickrig_$slot.kml');
+    await addKMLReference('http://$_host:$_webPort/kml/lgquickrig_$slot.kml');
   }
 
   Future<void> addKMLReference(String url) async {
@@ -46,7 +50,7 @@ class LGKMLController {
     required double east,
     required double west,
   }) async {
-    final imageUrl = 'http://$_host/$imageName';
+    final imageUrl = 'http://$_host:$_webPort/$imageName';
     final kml = '<?xml version="1.0" encoding="UTF-8"?>'
         '<kml xmlns="http://www.opengis.net/kml/2.2">'
         '<GroundOverlay>'
