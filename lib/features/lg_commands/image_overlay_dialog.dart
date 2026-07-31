@@ -7,6 +7,7 @@ import '../../core/di/service_locator.dart';
 import '../../core/ssh/ssh_client.dart';
 import '../../services/lg_kml_controller.dart';
 import '../../services/lg_orbit_controller.dart';
+import 'current_view.dart';
 
 class ImageOverlayDialog extends StatefulWidget {
   const ImageOverlayDialog({super.key});
@@ -69,24 +70,20 @@ class _ImageOverlayDialogState extends State<ImageOverlayDialog> {
   }
 
   Future<void> _useCurrentView() async {
-    if (!_ssh.isConnected) {
-      setState(() => _error = 'Not connected to the LG rig.');
-      return;
-    }
     setState(() {
       _busy = true;
       _error = null;
     });
-    final target = await _orbit.currentTarget();
+    final error = await fillCurrentView(
+      _orbit,
+      connected: _ssh.isConnected,
+      lat: _latCtrl,
+      lng: _lngCtrl,
+    );
     if (!mounted) return;
     setState(() {
       _busy = false;
-      if (target == null) {
-        _error = 'Could not read the current view.';
-      } else {
-        _latCtrl.text = target.lat.toStringAsFixed(6);
-        _lngCtrl.text = target.lng.toStringAsFixed(6);
-      }
+      _error = error;
     });
   }
 

@@ -139,16 +139,8 @@ class DashboardController extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> cleanKML() =>
       _runAction('Clean KML', _kmlController.cleanKML);
 
-  /// Rig sanity check: drop a pin on the Taj Mahal and fly there — if the
-  /// pin appears, the whole KML pipeline (write, kmls.txt, refresh) works.
-  Future<void> kmlTest() => _runAction('KML Test', () async {
-        await _kmlController.dropPin(
-          lat: 27.1751,
-          lng: 78.0421,
-          name: 'QuickRig KML Test',
-        );
-        await _orbit.flyTo(lat: 27.1751, lng: 78.0421, range: 5000);
-      });
+  Future<void> kmlTest() =>
+      _runAction('KML Test', () => kmlSanityCheck(_kmlController, _orbit));
 
   Future<void> _runAction(
     String label,

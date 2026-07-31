@@ -1,4 +1,5 @@
 import 'lg_command_service.dart';
+import 'lg_orbit_controller.dart';
 
 class LGKMLController {
   final LGCommandService _commandService;
@@ -20,10 +21,10 @@ class LGKMLController {
     await _commandService.execute(
       "echo '$escaped' > $_kmlDir/lgquickrig_$slot.kml",
     );
-    await addKMLReference('http://$_host:$_webPort/kml/lgquickrig_$slot.kml');
+    await _addKMLReference('http://$_host:$_webPort/kml/lgquickrig_$slot.kml');
   }
 
-  Future<void> addKMLReference(String url) async {
+  Future<void> _addKMLReference(String url) async {
     // Append only if not already listed — repeated overlays would otherwise
     // pile up duplicate entries in kmls.txt.
     await _commandService.execute(
@@ -93,4 +94,18 @@ class LGKMLController {
   String get _host => _commandService.host;
 
   String _shellEscape(String content) => content.replaceAll("'", r"'\''");
+}
+
+/// Rig sanity check: drop a pin wherever the rig is currently looking (the
+/// Taj Mahal only as a fallback if nothing's been flown to yet) and fly
+/// there — if the pin appears, the whole KML pipeline (write, kmls.txt,
+/// refresh) works. Shared by the dashboard's KML Test tile and the Linux
+/// tray's menu item so there's one implementation to keep dynamic.
+Future<void> kmlSanityCheck(LGKMLController kml, LGOrbitController orbit) async {
+  final target = await orbit.currentTarget();
+  final lat = target?.lat ?? 27.1751;
+  final lng = target?.lng ?? 78.0421;
+  final range = target?.range ?? 5000;
+  await kml.dropPin(lat: lat, lng: lng, name: 'QuickRig KML Test');
+  await orbit.flyTo(lat: lat, lng: lng, range: range);
 }

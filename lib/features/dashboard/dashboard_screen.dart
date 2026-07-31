@@ -1,10 +1,11 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
+import '../../core/constants.dart';
 import '../../core/ssh/ssh_credentials.dart';
 import '../../shared/widgets/connection_status_badge.dart';
+import '../copilot/copilot_sheet.dart';
 import '../lg_commands/image_overlay_dialog.dart';
 import '../settings/settings_screen.dart';
 import 'dashboard_controller.dart';
@@ -17,9 +18,6 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  static const _commandsChannel =
-      MethodChannel('com.liqtech.lg_quickrig/commands');
-
   final _ctrl = DashboardController();
 
   @override
@@ -35,6 +33,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       builder: (context, _) {
         return Scaffold(
           appBar: _buildAppBar(),
+          floatingActionButton: FloatingActionButton(
+            tooltip: 'Copilot',
+            onPressed: () => CopilotSheet.show(context),
+            child: const Icon(Icons.auto_awesome),
+          ),
           body: ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             children: [
@@ -166,7 +169,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     var pinned = false;
     try {
-      pinned = await _commandsChannel
+      pinned = await platformCommandsChannel
               .invokeMethod<bool>('pinWidget', {'widget': choice}) ??
           false;
     } catch (_) {}
@@ -504,8 +507,6 @@ class _ActionTile extends StatelessWidget {
 class _WidgetButtonsDialog extends StatefulWidget {
   const _WidgetButtonsDialog();
 
-  static const _channel = MethodChannel('com.liqtech.lg_quickrig/commands');
-
   static const actions = {
     'clean': 'Clean KML',
     'relaunch': 'Relaunch',
@@ -544,10 +545,10 @@ class _WidgetButtonsDialogState extends State<_WidgetButtonsDialog> {
 
   Future<void> _load() async {
     try {
-      final home = await _WidgetButtonsDialog._channel
+      final home = await platformCommandsChannel
           .invokeListMethod<String>('getWidgetButtons', {'widget': 'home'});
       if (home != null && home.length == 4) _home = List.of(home);
-      final status = await _WidgetButtonsDialog._channel
+      final status = await platformCommandsChannel
           .invokeListMethod<String>('getWidgetButtons', {'widget': 'status'});
       if (status != null && status.length == 3) _status = List.of(status);
     } catch (_) {}
@@ -557,9 +558,9 @@ class _WidgetButtonsDialogState extends State<_WidgetButtonsDialog> {
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      await _WidgetButtonsDialog._channel.invokeMethod(
+      await platformCommandsChannel.invokeMethod(
           'saveWidgetButtons', {'widget': 'home', 'buttons': _home});
-      await _WidgetButtonsDialog._channel.invokeMethod(
+      await platformCommandsChannel.invokeMethod(
           'saveWidgetButtons', {'widget': 'status', 'buttons': _status});
       if (mounted) Navigator.of(context).pop();
     } catch (_) {

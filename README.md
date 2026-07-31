@@ -32,7 +32,7 @@
 
 <table>
 <tr>
-<td align="center"><b>4 / 8</b><br/><sub>Weeks done</sub></td>
+<td align="center"><b>5 / 8</b><br/><sub>Weeks done</sub></td>
 <td align="center"><b>2</b><br/><sub>Platforms</sub></td>
 <td align="center"><b>8</b><br/><sub>Kotlin files</sub></td>
 <td align="center"><b>4</b><br/><sub>Android surfaces</sub></td>
@@ -58,7 +58,7 @@
 - **Camera control on the rig** — Fly To, Orbit, image overlays, colour-coded map markers, and a one-tap KML Test that proves the whole pipeline
 - **Floating widget dialogs** — widget buttons open a translucent dialog over the launcher; the full app never has to come forward
 - **Linux system tray** — full menu of rig actions, live status icon (green/red), and the camera dialogs, no window needed
-- **Coming:** a **Gemini Copilot** — a floating, screen-context-aware assistant: "fly to Rome, pin it and orbit" in plain language, connection diagnosis, and location content as balloons on the rig
+- **Gemini Copilot** — a floating chat assistant: "fly to Rome, pin it and orbit" in plain language, dispatched onto the same services the buttons use. Opt-in, runs on your own free-tier API key, with live token/cost tracking so it never surprises you. **Coming:** connection diagnosis and location content as balloons on the rig
 
 > The goal is a zero-friction rig operator's tool. If it takes more than one tap, it's too many.
 
@@ -142,7 +142,7 @@ Status widget's 3 action buttons each accept any of the 10 catalog actions.
 
 <div align="center">
 
-`Progress ████████████████░░░░░░░░░░░░░░░░  4 of 8 weeks  (week 5 in progress)`
+`Progress ████████████████████░░░░░░░░░░░░  5 of 8 weeks  (week 6 in progress)`
 
 </div>
 
@@ -154,8 +154,8 @@ Status widget's 3 action buttons each accept any of the 10 catalog actions.
 | ✅ | **2** | **Android Widgets + Platform Channels** | `LGCommandChannel.kt` · `LGCredentialStore.kt` · `LGSshExecutor.kt` (JSch) · Command Bar widget (4x1) · Quick Settings tile |
 | ✅ | **3** | **Live Status Widget + Rig Camera Control** | `LGStatusWidgetProvider.kt` · 2x2 status widget · 5-min auto-refresh · Fly To / Orbit / Overlay dialogs · floating `CameraDialogActivity` |
 | ✅ | **4** | **Linux Desktop + KML Features** | `linux/` runner · system tray · image overlays · map markers · KML Test · widget customization for both widgets |
-| - | **5** | **Gemini Copilot — Core** | In progress — floating FAB + chat sheet · context snapshot · function-calling dispatcher onto existing services |
-| 🔜 | **6** | **Gemini Copilot — Doctor + Content** | Connection diagnosis from real errors · location content as balloons on the rig |
+| ✅ | **5** | **Gemini Copilot — Core** | Floating FAB + chat sheet · context snapshot · function-calling dispatcher (fly to / orbit / drop pin / clean KML) · opt-in toggle + live token/cost display · self-serve API key |
+| - | **6** | **Gemini Copilot — Doctor + Content** | Connection diagnosis from real errors · location content as balloons on the rig |
 | 🔜 | **7** | **Testing + Polish** | Unit · integration · widget tests · Debian/Ubuntu packaging |
 | 🔜 | **8** | **Docs + Submission** | Final docs · demo video · submission-ready release |
 
@@ -206,15 +206,19 @@ lg_quickrig/
 │   ├── data/repositories/
 │   │   └── credentials_repository.dart
 │   ├── services/
+│   │   ├── copilot_service.dart          ← Gemini chat + function-calling dispatcher
 │   │   ├── lg_command_service.dart       ← SSH commands + camera-target readback
 │   │   ├── lg_kml_controller.dart        ← KML slots, overlays, pins/markers, clean
 │   │   └── lg_orbit_controller.dart      ← flyTo, orbit, currentTarget fallback
 │   ├── features/
+│   │   ├── copilot/
+│   │   │   └── copilot_sheet.dart        ← chat UI: disabled/no-key/chat states, live cost display
 │   │   ├── dashboard/
 │   │   │   ├── dashboard_controller.dart
 │   │   │   └── dashboard_screen.dart     ← quick actions + widget customization dialog
 │   │   ├── lg_commands/
 │   │   │   ├── camera_action_dialog.dart ← Fly To / Orbit
+│   │   │   ├── current_view.dart         ← shared "use current view" helper
 │   │   │   └── image_overlay_dialog.dart ← image overlays + pins & markers
 │   │   └── settings/
 │   │       └── settings_screen.dart
@@ -226,6 +230,7 @@ lg_quickrig/
 ├── linux/                                ← Flutter Linux runner
 │
 └── test/
+    ├── copilot_service_test.dart
     └── widget_test.dart
 ```
 
@@ -248,7 +253,7 @@ lg_quickrig/
 | ![DI](https://img.shields.io/badge/-GetIt-FF9F1C) | **get\_it ^8.0** | Zero-codegen service locator — resolve anywhere, no BuildContext |
 | ![State](https://img.shields.io/badge/-ChangeNotifier-00B4D8) | **ChangeNotifier** | Reactive UI without extra state management packages |
 | ![Tray](https://img.shields.io/badge/-tray__manager-FCC624?logo=linux&logoColor=black) | **tray\_manager ^0.2** | Linux system tray — rig actions without opening the window |
-| ![Gemini](https://img.shields.io/badge/-Gemini_API-4285F4?logo=google&logoColor=white) | **Gemini API** | *(Week 5+)* Copilot: natural-language rig control, connection doctor, content balloons |
+| ![Gemini](https://img.shields.io/badge/-Gemini_API-4285F4?logo=google&logoColor=white) | **Gemini API** | Copilot: natural-language rig control via function calling. Opt-in, user-supplied key, live cost tracking. Connection doctor + content balloons next |
 
 </div>
 
@@ -299,6 +304,8 @@ flutter run -d linux   # Linux desktop window
 **To add the Quick Settings tile:** pull down the shade → edit tiles → add *LG QuickRig*.
 
 **To customize widget buttons:** in the app, tap the widgets icon in the app bar → *Customize widget buttons* — both the Command Bar's 4 slots and the Live Status widget's 3 buttons.
+
+**To enable Copilot:** in Settings, flip *Enable Copilot* on and paste a free Gemini API key from [aistudio.google.com](https://aistudio.google.com) — no credit card required. It's off by default since it spends your own API credits; the chat header shows live token/cost usage for every message.
 
 <br/>
 
