@@ -1,7 +1,6 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../core/constants.dart';
@@ -22,8 +21,10 @@ class CredentialsRepository {
   static const _kPassword = 'lg_cred_password';
   static const _kNodeCount = 'lg_cred_node_count';
 
-  static const _platformChannel =
-      MethodChannel('com.liqtech.lg_quickrig/commands');
+  // Not part of SSHCredentials on purpose — it isn't an SSH credential and
+  // must not be mirrored to the Android widgets.
+  static const _kGeminiKey = 'gemini_api_key';
+  static const _kCopilotEnabled = 'copilot_enabled';
 
   Future<SSHCredentials?> load() async {
     final host = await _storage.read(key: _kHost);
@@ -70,7 +71,7 @@ class CredentialsRepository {
 
     if (!kIsWeb && Platform.isAndroid) {
       try {
-        await _platformChannel.invokeMethod('clearCredentials');
+        await platformCommandsChannel.invokeMethod('clearCredentials');
       } catch (_) {}
     }
   }
@@ -78,7 +79,7 @@ class CredentialsRepository {
   Future<void> _mirrorToWidgets(SSHCredentials creds) async {
     if (kIsWeb || !Platform.isAndroid) return;
     try {
-      await _platformChannel.invokeMethod('saveCredentials', {
+      await platformCommandsChannel.invokeMethod('saveCredentials', {
         'host': creds.host,
         'port': creds.port.toString(),
         'username': creds.username,
@@ -88,8 +89,16 @@ class CredentialsRepository {
     } catch (_) {}
   }
 
-  Future<bool> hasCredentials() async {
-    final host = await _storage.read(key: _kHost);
-    return host != null && host.isNotEmpty;
-  }
+  Future<String?> loadGeminiKey() => _storage.read(key: _kGeminiKey);
+
+  Future<void> saveGeminiKey(String key) =>
+      _storage.write(key: _kGeminiKey, value: key);
+
+  // Off by default — Copilot spends the user's own API credits, so it's an
+  // opt-in, not something that starts calling out on first launch.
+  Future<bool> loadCopilotEnabled() async =>
+      (await _storage.read(key: _kCopilotEnabled)) == 'true';
+
+  Future<void> saveCopilotEnabled(bool enabled) =>
+      _storage.write(key: _kCopilotEnabled, value: enabled.toString());
 }

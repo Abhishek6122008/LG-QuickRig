@@ -21,7 +21,7 @@ void main() {
   // Register singletons once for the entire test file.
   // GetIt uses a global registry, so this survives across test cases.
   setUpAll(() async {
-    await ServiceLocator.setup();
+    await setupServiceLocator();
   });
 
   tearDownAll(() async {
@@ -65,6 +65,10 @@ void main() {
     expect(find.text('Node count'), findsOneWidget);
     expect(find.text('Username'), findsOneWidget);
     expect(find.text('Password'), findsOneWidget);
+
+    // The Copilot section pushes the button below the fold — scroll to it.
+    await tester.drag(find.byType(ListView), const Offset(0, -400));
+    await tester.pump();
     expect(find.text('Save & Connect'), findsOneWidget);
   });
 }

@@ -10,7 +10,7 @@ void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
 
-  await ServiceLocator.setup();
+  await setupServiceLocator();
 
   if (Platform.isLinux) {
     try {

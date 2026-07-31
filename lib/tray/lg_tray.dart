@@ -135,11 +135,7 @@ class LGTray with TrayListener {
     await trayManager.setContextMenu(menu);
   }
 
-  /// Same sanity check as the dashboard's KML Test tile.
-  Future<void> _kmlTest() async {
-    await _kml.dropPin(lat: 27.1751, lng: 78.0421, name: 'QuickRig KML Test');
-    await _orbit.flyTo(lat: 27.1751, lng: 78.0421, range: 5000);
-  }
+  Future<void> _kmlTest() => kmlSanityCheck(_kml, _orbit);
 
   /// Camera actions need text input, so they open the app's existing dialogs.
   /// ponytail: doesn't raise a minimized window — add window_manager if that

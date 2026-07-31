@@ -21,10 +21,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _userCtrl = TextEditingController(text: LGDefaults.username);
   final _passCtrl = TextEditingController();
   final _nodeCtrl = TextEditingController(text: '3');
+  final _geminiCtrl = TextEditingController();
 
   bool _loading = true;
   bool _saving = false;
   bool _obscurePassword = true;
+  bool _copilotEnabled = false;
 
   // Saved password is never shown in the field; keep it so an edit that
   // leaves the field blank doesn't wipe it.
@@ -43,6 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _userCtrl.dispose();
     _passCtrl.dispose();
     _nodeCtrl.dispose();
+    _geminiCtrl.dispose();
     super.dispose();
   }
 
@@ -57,6 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _nodeCtrl.text = creds.nodeCount.toString();
         _savedPassword = creds.password;
       }
+      _copilotEnabled = await _repo.loadCopilotEnabled();
     } catch (_) {
       // Secure storage unavailable — start from defaults instead of
       // spinning forever.
@@ -78,6 +82,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
 
     await _repo.save(creds);
+
+    final geminiKey = _geminiCtrl.text.trim();
+    if (geminiKey.isNotEmpty) await _repo.saveGeminiKey(geminiKey);
+    await _repo.saveCopilotEnabled(_copilotEnabled);
 
     if (!mounted) return;
     Navigator.pop(context, creds);
@@ -198,6 +206,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                     obscureText: _obscurePassword,
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: 24),
+                  _SectionLabel('Copilot (optional)'),
+                  const SizedBox(height: 12),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _copilotEnabled,
+                    onChanged: (v) => setState(() => _copilotEnabled = v),
+                    title: const Text('Enable Copilot'),
+                    subtitle: const Text(
+                      'AI assistant that spends YOUR Gemini API credits, not '
+                      'anyone else\'s. Free tier covers casual use — a '
+                      'typical message costs roughly 700–1500 tokens '
+                      '(~\$0.0003–\$0.0009 on the paid tier).',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _geminiCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Gemini API key',
+                      helperText: 'Free at aistudio.google.com. '
+                          'Leave blank to keep the saved key.',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.auto_awesome_outlined),
+                    ),
+                    obscureText: true,
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _save(),
                   ),

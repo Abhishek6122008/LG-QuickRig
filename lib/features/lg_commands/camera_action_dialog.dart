@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/di/service_locator.dart';
 import '../../core/ssh/ssh_client.dart';
 import '../../services/lg_orbit_controller.dart';
+import 'current_view.dart';
 
 class CameraActionDialog extends StatefulWidget {
 
@@ -44,27 +45,21 @@ class _CameraActionDialogState extends State<CameraActionDialog> {
   }
 
   Future<void> _useCurrentView() async {
-    if (!_ssh.isConnected) {
-      setState(() => _error = 'Not connected to the LG rig.');
-      return;
-    }
     setState(() {
       _busy = true;
       _error = null;
     });
-    final target = await _orbit.currentTarget();
+    final error = await fillCurrentView(
+      _orbit,
+      connected: _ssh.isConnected,
+      lat: _latCtrl,
+      lng: _lngCtrl,
+      range: _rangeCtrl,
+    );
     if (!mounted) return;
     setState(() {
       _busy = false;
-      if (target == null) {
-        _error = 'Could not read the current view.';
-      } else {
-        _latCtrl.text = target.lat.toStringAsFixed(6);
-        _lngCtrl.text = target.lng.toStringAsFixed(6);
-        if (target.range != null) {
-          _rangeCtrl.text = target.range!.toStringAsFixed(0);
-        }
-      }
+      _error = error;
     });
   }
 

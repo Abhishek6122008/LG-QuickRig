@@ -14,14 +14,16 @@ dependencies:
   image_picker: ^1.1.2
   dartssh2: ^2.9.0
 
+  # Copilot talks to the Gemini REST API directly — the official Dart SDK
+  # is deprecated and its replacement drags in all of Firebase.
+  http: ^1.2.2
+
   # Encrypted storage for SSH credentials (host, username, password).
   # Uses Android Keystore (API 23+) / iOS Keychain / libsecret on Linux.
   flutter_secure_storage: ^9.2.2
 
   # Service locator / dependency injection — no code generation required.
   get_it: ^8.0.2
-
-  cupertino_icons: ^1.0.8
 
 dev_dependencies:
   flutter_test:
