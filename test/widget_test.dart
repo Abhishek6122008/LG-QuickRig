@@ -1,32 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:lg_quickrig/app.dart';
-import 'package:lg_quickrig/core/di/service_locator.dart';
+import 'package:lg_quickrig/core/ssh/ssh_credentials.dart';
+import 'package:lg_quickrig/core/ssh/ssh_exception.dart';
 import 'package:lg_quickrig/features/settings/settings_screen.dart';
+
+import 'fakes.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  // Mock secure storage as "empty". Without a mock the platform channel
-  // never responds inside the fake-async test zone, so credential loads
-  // (auto-connect, settings) would hang forever regardless of pumps.
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(
-    const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
-    (call) async => call.method == 'readAll' ? <String, String>{} : null,
+  late FakeSSHClient ssh;
+  late FakeCredentialsRepository creds;
+
+  const savedCreds = SSHCredentials(
+    host: '192.168.2.2',
+    port: 22,
+    username: 'lg',
+    password: 'lg',
   );
 
-  // Register singletons once for the entire test file.
-  // GetIt uses a global registry, so this survives across test cases.
-  setUpAll(() async {
-    await setupServiceLocator();
-  });
-
-  tearDownAll(() async {
-    // Reset so subsequent test runs start clean (relevant in watch mode).
-    await sl.reset();
+  setUp(() async {
+    final rig = await useFakeRig();
+    ssh = rig.ssh;
+    creds = rig.creds;
   });
 
   testWidgets('Dashboard renders in disconnected state on first launch',
@@ -37,26 +35,15 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    // App title appears in the AppBar.
     expect(find.text('LG QuickRig'), findsWidgets);
-
-    // Connection status badge shows "Disconnected" with no saved credentials.
-    // flutter_secure_storage returns null in test environments, so no
-    // auto-connect is attempted.
     expect(find.text('Disconnected'), findsOneWidget);
-
-    // Quick actions section is present.
     expect(find.text('Quick Actions'), findsOneWidget);
-
-    // The Connect button is visible.
     expect(find.text('Connect'), findsOneWidget);
   });
 
   testWidgets('Settings screen renders form fields', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
 
-    // Let the saved-credentials load resolve (secure storage is unavailable
-    // in tests, so the form falls back to defaults).
     await tester.pump();
     await tester.pump();
 
@@ -70,5 +57,60 @@ void main() {
     await tester.drag(find.byType(ListView), const Offset(0, -400));
     await tester.pump();
     expect(find.text('Save & Connect'), findsOneWidget);
+  });
+
+  // Week 6: a failed connection is the moment a rig operator most needs help,
+  // so the banner offers to hand the real SSH error to Copilot.
+  testWidgets('a failed connection offers a Copilot diagnosis',
+      (tester) async {
+    creds.creds = savedCreds;
+    ssh.connectError = const LGSSHException('Authentication failed');
+
+    await tester.pumpWidget(const LGQuickRigApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Connect'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Authentication failed'), findsOneWidget);
+    expect(find.byTooltip('Diagnose with Copilot'), findsOneWidget);
+  });
+
+  // The diagnosis prompt must not fire a request (and spend credits) on a
+  // Copilot the user has never switched on.
+  testWidgets('the diagnosis prompt does not auto-send while Copilot is off',
+      (tester) async {
+    creds.creds = savedCreds;
+    creds.copilotEnabled = false;
+    ssh.connectError = const LGSSHException('Connection refused');
+
+    await tester.pumpWidget(const LGQuickRigApp());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Connect'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Diagnose with Copilot'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Copilot is turned off'), findsOneWidget);
+    expect(find.text('Open Settings'), findsOneWidget);
+  });
+
+  testWidgets('an enabled Copilot with no key asks for one first',
+      (tester) async {
+    creds.creds = savedCreds;
+    creds.copilotEnabled = true;
+    creds.geminiKey = null;
+    ssh.connectError = const LGSSHException('No route to host');
+
+    await tester.pumpWidget(const LGQuickRigApp());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Connect'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Diagnose with Copilot'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Gemini API key'), findsOneWidget);
   });
 }

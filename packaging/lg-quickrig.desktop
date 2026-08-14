@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=LG QuickRig
+GenericName=Liquid Galaxy Controller
+Comment=One-tap SSH control for a Liquid Galaxy rig
+Exec=lg-quickrig
+Icon=lg-quickrig
+Terminal=false
+Categories=Utility;Network;
+Keywords=liquid galaxy;lg;ssh;kml;google earth;
+StartupWMClass=lg_quickrig

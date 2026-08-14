@@ -33,7 +33,13 @@ class CopilotService {
   final LGOrbitController _orbit;
   final CredentialsRepository _credsRepo;
 
-  CopilotService(this._commands, this._kml, this._orbit, this._credsRepo);
+  // Injectable so tests can drive the whole loop with package:http's
+  // MockClient instead of calling Gemini for real.
+  final http.Client _http;
+
+  CopilotService(this._commands, this._kml, this._orbit, this._credsRepo,
+      {http.Client? client})
+      : _http = client ?? http.Client();
 
   static const _url = 'https://generativelanguage.googleapis.com/v1beta/'
       'models/gemini-2.5-flash:generateContent';
@@ -126,7 +132,7 @@ class CopilotService {
   Future<Map<String, dynamic>> _generate(String key) async {
     http.Response resp;
     try {
-      resp = await http
+      resp = await _http
           .post(
             Uri.parse(_url),
             headers: {
