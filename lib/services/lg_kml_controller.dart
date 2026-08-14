@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'lg_command_service.dart';
 import 'lg_orbit_controller.dart';
 
@@ -70,19 +72,25 @@ class LGKMLController {
   /// Drops a tinted Placemark. With no [iconHref] it uses the built-in
   /// pushpin, which renders even on rigs without internet access; an
   /// [iconHref] (e.g. the mapfiles flag/target icons) needs the rig online.
-  /// [kmlColor] is KML aabbggrr, e.g. ff0000ff = red.
+  /// [kmlColor] is KML aabbggrr, e.g. ff0000ff = red. [description], if
+  /// given, becomes the info balloon shown when the pin is clicked on the rig.
   Future<void> dropPin({
     required double lat,
     required double lng,
     String name = 'QuickRig Pin',
+    String? description,
     String kmlColor = 'ff0000ff',
     String? iconHref,
   }) async {
     final icon = iconHref != null ? '<Icon><href>$iconHref</href></Icon>' : '';
+    final desc = description != null
+        ? '<description>${htmlEscape.convert(description)}</description>'
+        : '';
     final kml = '<?xml version="1.0" encoding="UTF-8"?>'
         '<kml xmlns="http://www.opengis.net/kml/2.2">'
         '<Placemark>'
-        '<name>$name</name>'
+        '<name>${htmlEscape.convert(name)}</name>'
+        '$desc'
         '<Style><IconStyle>'
         '<color>$kmlColor</color><scale>1.4</scale>$icon'
         '</IconStyle></Style>'

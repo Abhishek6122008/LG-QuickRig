@@ -327,6 +327,17 @@ class _ErrorBanner extends StatelessWidget {
               style: const TextStyle(color: Color(0xFFC5221F), fontSize: 13),
             ),
           ),
+          IconButton(
+            icon: const Icon(Icons.auto_awesome,
+                color: Color(0xFFC5221F), size: 18),
+            tooltip: 'Diagnose with Copilot',
+            visualDensity: VisualDensity.compact,
+            onPressed: () => CopilotSheet.show(
+              context,
+              initialPrompt: 'Diagnose this Liquid Galaxy connection error '
+                  'and suggest how to fix it: "$message"',
+            ),
+          ),
         ],
       ),
     );

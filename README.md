@@ -32,7 +32,7 @@
 
 <table>
 <tr>
-<td align="center"><b>5 / 8</b><br/><sub>Weeks done</sub></td>
+<td align="center"><b>6 / 8</b><br/><sub>Weeks done</sub></td>
 <td align="center"><b>2</b><br/><sub>Platforms</sub></td>
 <td align="center"><b>8</b><br/><sub>Kotlin files</sub></td>
 <td align="center"><b>4</b><br/><sub>Android surfaces</sub></td>
@@ -58,7 +58,7 @@
 - **Camera control on the rig** — Fly To, Orbit, image overlays, colour-coded map markers, and a one-tap KML Test that proves the whole pipeline
 - **Floating widget dialogs** — widget buttons open a translucent dialog over the launcher; the full app never has to come forward
 - **Linux system tray** — full menu of rig actions, live status icon (green/red), and the camera dialogs, no window needed
-- **Gemini Copilot** — a floating chat assistant: "fly to Rome, pin it and orbit" in plain language, dispatched onto the same services the buttons use. Opt-in, runs on your own free-tier API key, with live token/cost tracking so it never surprises you. **Coming:** connection diagnosis and location content as balloons on the rig
+- **Gemini Copilot** — a floating chat assistant: "fly to Rome, pin it and orbit" in plain language, dispatched onto the same services the buttons use. Opt-in, runs on your own free-tier API key, with live token/cost tracking so it never surprises you. Diagnoses connection errors in plain language and writes info balloons for dropped pins
 
 > The goal is a zero-friction rig operator's tool. If it takes more than one tap, it's too many.
 
@@ -142,7 +142,7 @@ Status widget's 3 action buttons each accept any of the 10 catalog actions.
 
 <div align="center">
 
-`Progress ████████████████████░░░░░░░░░░░░  5 of 8 weeks  (week 6 in progress)`
+`Progress ████████████████████████░░░░░░░░  6 of 8 weeks  (week 7 in progress)`
 
 </div>
 
@@ -155,8 +155,8 @@ Status widget's 3 action buttons each accept any of the 10 catalog actions.
 | ✅ | **3** | **Live Status Widget + Rig Camera Control** | `LGStatusWidgetProvider.kt` · 2x2 status widget · 5-min auto-refresh · Fly To / Orbit / Overlay dialogs · floating `CameraDialogActivity` |
 | ✅ | **4** | **Linux Desktop + KML Features** | `linux/` runner · system tray · image overlays · map markers · KML Test · widget customization for both widgets |
 | ✅ | **5** | **Gemini Copilot — Core** | Floating FAB + chat sheet · context snapshot · function-calling dispatcher (fly to / orbit / drop pin / clean KML) · opt-in toggle + live token/cost display · self-serve API key |
-| - | **6** | **Gemini Copilot — Doctor + Content** | Connection diagnosis from real errors · location content as balloons on the rig |
-| 🔜 | **7** | **Testing + Polish** | Unit · integration · widget tests · Debian/Ubuntu packaging |
+| ✅ | **6** | **Gemini Copilot — Doctor + Content** | "Diagnose with Copilot" on the connection error banner, reasoning over the real SSH error · Copilot-authored info balloons on dropped pins |
+| - | **7** | **Testing + Polish** | Unit · integration · widget tests · Debian/Ubuntu packaging |
 | 🔜 | **8** | **Docs + Submission** | Final docs · demo video · submission-ready release |
 
 <br/>
@@ -253,7 +253,7 @@ lg_quickrig/
 | ![DI](https://img.shields.io/badge/-GetIt-FF9F1C) | **get\_it ^8.0** | Zero-codegen service locator — resolve anywhere, no BuildContext |
 | ![State](https://img.shields.io/badge/-ChangeNotifier-00B4D8) | **ChangeNotifier** | Reactive UI without extra state management packages |
 | ![Tray](https://img.shields.io/badge/-tray__manager-FCC624?logo=linux&logoColor=black) | **tray\_manager ^0.2** | Linux system tray — rig actions without opening the window |
-| ![Gemini](https://img.shields.io/badge/-Gemini_API-4285F4?logo=google&logoColor=white) | **Gemini API** | Copilot: natural-language rig control via function calling. Opt-in, user-supplied key, live cost tracking. Connection doctor + content balloons next |
+| ![Gemini](https://img.shields.io/badge/-Gemini_API-4285F4?logo=google&logoColor=white) | **Gemini API** | Copilot: natural-language rig control via function calling, connection error diagnosis, and info-balloon content for pins. Opt-in, user-supplied key, live cost tracking |
 
 </div>
 
