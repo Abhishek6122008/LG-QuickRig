@@ -7,13 +7,18 @@ import '../settings/settings_screen.dart';
 
 /// Bottom-sheet chat for the Gemini Copilot, opened from the dashboard FAB.
 class CopilotSheet extends StatefulWidget {
-  const CopilotSheet({super.key});
+  /// Sent automatically on open if Copilot is already enabled and keyed —
+  /// used by the dashboard's error banner to ask for a connection diagnosis.
+  final String? initialPrompt;
 
-  static Future<void> show(BuildContext context) => showModalBottomSheet(
+  const CopilotSheet({super.key, this.initialPrompt});
+
+  static Future<void> show(BuildContext context, {String? initialPrompt}) =>
+      showModalBottomSheet(
         context: context,
         isScrollControlled: true,
         useSafeArea: true,
-        builder: (_) => const CopilotSheet(),
+        builder: (_) => CopilotSheet(initialPrompt: initialPrompt),
       );
 
   @override
@@ -57,6 +62,8 @@ class _CopilotSheetState extends State<CopilotSheet> {
       _hasKey = (key ?? '').trim().isNotEmpty;
       _loadingState = false;
     });
+    final prompt = widget.initialPrompt;
+    if (prompt != null && _enabled && _hasKey) _send(prompt);
   }
 
   Future<void> _openSettings() async {
@@ -78,8 +85,8 @@ class _CopilotSheetState extends State<CopilotSheet> {
     });
   }
 
-  Future<void> _send() async {
-    final text = _inputCtrl.text.trim();
+  Future<void> _send([String? override]) async {
+    final text = (override ?? _inputCtrl.text).trim();
     if (text.isEmpty || _busy) return;
     _inputCtrl.clear();
     setState(() {

@@ -27,14 +27,15 @@
 [![DI](https://img.shields.io/badge/DI-GetIt-FF9F1C?style=flat-square)](https://pub.dev/packages/get_it)
 [![JSch](https://img.shields.io/badge/Kotlin_SSH-JSch-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://github.com/mwiede/jsch)
 [![Gemini](https://img.shields.io/badge/AI-Gemini_API-4285F4?style=flat-square&logo=google&logoColor=white)](https://ai.google.dev)
+[![CI](https://github.com/Abhishek6122008/LG-QuickRig/actions/workflows/ci.yml/badge.svg)](https://github.com/Abhishek6122008/LG-QuickRig/actions/workflows/ci.yml)
 
 <br/>
 
 <table>
 <tr>
-<td align="center"><b>5 / 8</b><br/><sub>Weeks done</sub></td>
+<td align="center"><b>7 / 8</b><br/><sub>Weeks done</sub></td>
 <td align="center"><b>2</b><br/><sub>Platforms</sub></td>
-<td align="center"><b>8</b><br/><sub>Kotlin files</sub></td>
+<td align="center"><b>58</b><br/><sub>Tests</sub></td>
 <td align="center"><b>4</b><br/><sub>Android surfaces</sub></td>
 <td align="center"><b>0</b><br/><sub>Plaintext secrets</sub></td>
 </tr>
@@ -58,7 +59,7 @@
 - **Camera control on the rig** — Fly To, Orbit, image overlays, colour-coded map markers, and a one-tap KML Test that proves the whole pipeline
 - **Floating widget dialogs** — widget buttons open a translucent dialog over the launcher; the full app never has to come forward
 - **Linux system tray** — full menu of rig actions, live status icon (green/red), and the camera dialogs, no window needed
-- **Gemini Copilot** — a floating chat assistant: "fly to Rome, pin it and orbit" in plain language, dispatched onto the same services the buttons use. Opt-in, runs on your own free-tier API key, with live token/cost tracking so it never surprises you. **Coming:** connection diagnosis and location content as balloons on the rig
+- **Gemini Copilot** — a floating chat assistant: "fly to Rome, pin it and orbit" in plain language, dispatched onto the same services the buttons use. Opt-in, runs on your own free-tier API key, with live token/cost tracking so it never surprises you. Diagnoses connection errors in plain language and writes info balloons for dropped pins
 
 > The goal is a zero-friction rig operator's tool. If it takes more than one tap, it's too many.
 
@@ -142,7 +143,7 @@ Status widget's 3 action buttons each accept any of the 10 catalog actions.
 
 <div align="center">
 
-`Progress ████████████████████░░░░░░░░░░░░  5 of 8 weeks  (week 6 in progress)`
+`Progress ████████████████████████████░░░░  7 of 8 weeks  (week 8 in progress)`
 
 </div>
 
@@ -155,9 +156,9 @@ Status widget's 3 action buttons each accept any of the 10 catalog actions.
 | ✅ | **3** | **Live Status Widget + Rig Camera Control** | `LGStatusWidgetProvider.kt` · 2x2 status widget · 5-min auto-refresh · Fly To / Orbit / Overlay dialogs · floating `CameraDialogActivity` |
 | ✅ | **4** | **Linux Desktop + KML Features** | `linux/` runner · system tray · image overlays · map markers · KML Test · widget customization for both widgets |
 | ✅ | **5** | **Gemini Copilot — Core** | Floating FAB + chat sheet · context snapshot · function-calling dispatcher (fly to / orbit / drop pin / clean KML) · opt-in toggle + live token/cost display · self-serve API key |
-| - | **6** | **Gemini Copilot — Doctor + Content** | Connection diagnosis from real errors · location content as balloons on the rig |
-| 🔜 | **7** | **Testing + Polish** | Unit · integration · widget tests · Debian/Ubuntu packaging |
-| 🔜 | **8** | **Docs + Submission** | Final docs · demo video · submission-ready release |
+| ✅ | **6** | **Gemini Copilot — Doctor + Content** | "Diagnose with Copilot" on the connection error banner, reasoning over the real SSH error · Copilot-authored info balloons on dropped pins |
+| ✅ | **7** | **Testing + Polish** | 57 unit + widget tests over every service · `integration_test` end-to-end flow on the Linux desktop · GitHub Actions CI · `.deb` package for Ubuntu/Debian |
+| - | **8** | **Docs + Submission** | Final docs · demo video · submission-ready release |
 
 <br/>
 
@@ -229,8 +230,22 @@ lg_quickrig/
 │
 ├── linux/                                ← Flutter Linux runner
 │
+├── packaging/
+│   ├── build_deb.sh                      ← stages the release bundle into a .deb
+│   └── lg-quickrig.desktop
+│
+├── .github/workflows/ci.yml              ← analyze · test · integration · .deb · apk
+│
+├── integration_test/
+│   └── app_test.dart                     ← settings → connect → rig action, end to end
+│
 └── test/
-    ├── copilot_service_test.dart
+    ├── fakes.dart                        ← fake SSH client, command service, credentials
+    ├── copilot_service_test.dart         ← parsing + the whole tool-calling loop
+    ├── credentials_repository_test.dart
+    ├── lg_command_service_test.dart      ← command strings, slave quoting, node walks
+    ├── lg_kml_controller_test.dart       ← KML slots, port 81, free-text escaping
+    ├── lg_orbit_controller_test.dart     ← flyTo, orbit ticks, target fallback
     └── widget_test.dart
 ```
 
@@ -253,7 +268,8 @@ lg_quickrig/
 | ![DI](https://img.shields.io/badge/-GetIt-FF9F1C) | **get\_it ^8.0** | Zero-codegen service locator — resolve anywhere, no BuildContext |
 | ![State](https://img.shields.io/badge/-ChangeNotifier-00B4D8) | **ChangeNotifier** | Reactive UI without extra state management packages |
 | ![Tray](https://img.shields.io/badge/-tray__manager-FCC624?logo=linux&logoColor=black) | **tray\_manager ^0.2** | Linux system tray — rig actions without opening the window |
-| ![Gemini](https://img.shields.io/badge/-Gemini_API-4285F4?logo=google&logoColor=white) | **Gemini API** | Copilot: natural-language rig control via function calling. Opt-in, user-supplied key, live cost tracking. Connection doctor + content balloons next |
+| ![Gemini](https://img.shields.io/badge/-Gemini_API-4285F4?logo=google&logoColor=white) | **Gemini API** | Copilot: natural-language rig control via function calling, connection error diagnosis, and info-balloon content for pins. Opt-in, user-supplied key, live cost tracking |
+| ![Tests](https://img.shields.io/badge/-flutter__test-0175C2?logo=dart&logoColor=white) | **flutter\_test + integration\_test** | Hand-written `Fake`s at two seams (SSH, secure storage) — no mockito, no codegen. CI runs the lot on every push |
 
 </div>
 
@@ -281,6 +297,26 @@ flutter pub get
 flutter run            # Android device / emulator
 flutter run -d linux   # Linux desktop window
 ```
+
+### Install on Ubuntu / Debian
+
+Grab `lg-quickrig-deb` from the latest green [CI run](https://github.com/Abhishek6122008/LG-QuickRig/actions/workflows/ci.yml), or build it yourself:
+
+```bash
+bash packaging/build_deb.sh                       # needs the Linux desktop toolchain
+sudo apt install ./build/deb/lg-quickrig_*.deb    # pulls in gtk, libsecret, appindicator
+lg-quickrig                                       # or launch it from the applications menu
+```
+
+### Tests
+
+```bash
+flutter test                              # 57 unit + widget tests
+flutter test integration_test -d linux    # end-to-end flow, no rig required
+```
+
+Everything is faked at two seams — the SSH socket and the secure storage — so
+the whole suite runs offline and touches neither a rig nor a keyring.
 
 ### First launch
 
