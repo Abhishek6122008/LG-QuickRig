@@ -59,7 +59,7 @@
 - **Camera control on the rig** — Fly To, Orbit, image overlays, colour-coded map markers, and a one-tap KML Test that proves the whole pipeline
 - **Floating widget dialogs** — widget buttons open a translucent dialog over the launcher; the full app never has to come forward
 - **Linux system tray** — full menu of rig actions, live status icon (green/red), and the camera dialogs, no window needed
-- **Gemini Copilot** — a floating chat assistant: "fly to Rome, pin it and orbit" in plain language, dispatched onto the same services the buttons use. Opt-in, runs on your own free-tier API key, with live token/cost tracking so it never surprises you. Diagnoses connection errors in plain language and writes info balloons for dropped pins
+- **Gemini Copilot** — a floating chat assistant: "fly to Rome, pin it and orbit" in plain language, dispatched onto the same services the buttons use. Drives **every** rig action — camera, KML, sync, blank screens, restart services, reboot, shutdown — with reboot and shutdown held behind an explicit in-chat confirmation. Opt-in, runs on your own free-tier API key, with live token/cost tracking so it never surprises you. Diagnoses connection errors in plain language and writes info balloons for dropped pins
 
 > The goal is a zero-friction rig operator's tool. If it takes more than one tap, it's too many.
 
@@ -91,7 +91,7 @@
 ║  ┌───────────────┐  ┌───────────────────┐ ║   ║  Longitude    blank = current view        ║
 ║  │     Reboot    │  │  Restart Services │ ║   ║  Size (km)    1                           ║
 ║  └───────────────┘  └───────────────────┘ ║   ║                                           ║
-║  ┌───────────────┐  ┌───────────────────┐ ║   ║                   ⌖ Use current view      ║
+║  ┌───────────────┐  ┌───────────────────┐ ║   ║                                           ║
 ║  │    Shutdown   │  │       Sync        │ ║   ║                                           ║
 ║  └───────────────┘  └───────────────────┘ ║   ║                   Cancel      [ Send ]    ║
 ║  ┌───────────────┐  ┌───────────────────┐ ║   ╚═══════════════════════════════════════════╝
@@ -143,7 +143,7 @@ Status widget's 3 action buttons each accept any of the 10 catalog actions.
 
 <div align="center">
 
-`Progress ████████████████████████████░░░░  7 of 8 weeks  (week 8 in progress)`
+`Progress ████████████████████████████████  8 of 8 weeks`
 
 </div>
 
@@ -158,7 +158,7 @@ Status widget's 3 action buttons each accept any of the 10 catalog actions.
 | ✅ | **5** | **Gemini Copilot — Core** | Floating FAB + chat sheet · context snapshot · function-calling dispatcher (fly to / orbit / drop pin / clean KML) · opt-in toggle + live token/cost display · self-serve API key |
 | ✅ | **6** | **Gemini Copilot — Doctor + Content** | "Diagnose with Copilot" on the connection error banner, reasoning over the real SSH error · Copilot-authored info balloons on dropped pins |
 | ✅ | **7** | **Testing + Polish** | 57 unit + widget tests over every service · `integration_test` end-to-end flow on the Linux desktop · GitHub Actions CI · `.deb` package for Ubuntu/Debian |
-| - | **8** | **Docs + Submission** | Final docs · demo video · submission-ready release |
+| ✅ | **8** | **Full Copilot Control + Docs** | Copilot reaches every Quick Action, with a confirmation gate on the destructive ones · Gemini 3.6 Flash migration · 81 tests · final docs |
 
 <br/>
 
@@ -311,7 +311,7 @@ lg-quickrig                                       # or launch it from the applic
 ### Tests
 
 ```bash
-flutter test                              # 57 unit + widget tests
+flutter test                              # 81 unit + widget tests
 flutter test integration_test -d linux    # end-to-end flow, no rig required
 ```
 

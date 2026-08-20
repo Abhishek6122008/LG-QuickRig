@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'app_shell.dart';
 import 'core/di/service_locator.dart';
 import 'core/ssh/ssh_client.dart';
+import 'core/theme/app_theme.dart';
 import 'data/repositories/credentials_repository.dart';
-import 'features/dashboard/dashboard_screen.dart';
 import 'features/lg_commands/camera_action_dialog.dart';
 import 'features/lg_commands/image_overlay_dialog.dart';
 
@@ -82,32 +83,12 @@ class _LGQuickRigAppState extends State<LGQuickRigApp> {
       navigatorKey: _navKey,
       title: 'LG QuickRig',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1A73E8),
-          brightness: Brightness.light,
-        ),
-        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFF8F9FA),
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          centerTitle: false,
-        ),
-        cardTheme: CardThemeData(
-          elevation: 0,
-          color: Colors.white,
-          surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: Color(0xFFE0E3E7)),
-          ),
-        ),
-      ),
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: ThemeMode.system,
       home: _cameraOnly
           ? const Scaffold(backgroundColor: Colors.transparent)
-          : const DashboardScreen(),
+          : const AppShell(),
     );
   }
 }

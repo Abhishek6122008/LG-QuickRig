@@ -83,13 +83,18 @@ class LGOrbitController {
     int currentStep = 0;
     bool isMoving = false;
 
+    void finish(Timer timer) {
+      timer.cancel();
+      _orbitTimer = null;
+      _orbitPlaying = false;
+      onStop?.call();
+    }
+
     _orbitTimer = Timer.periodic(
       const Duration(milliseconds: stepDurationMs),
-      (timer) {
+      (timer) async {
         if (!_orbitPlaying || currentStep >= steps) {
-          timer.cancel();
-          _orbitPlaying = false;
-          onStop?.call();
+          finish(timer);
           return;
         }
         if (isMoving) return;
@@ -107,17 +112,28 @@ class LGOrbitController {
             '<gx:altitudeMode>relativeToGround</gx:altitudeMode>'
             '</LookAt>';
         _lastOrbitPosition = lookAt;
-
-        _commandService
-            .execute("echo 'flytoview=$lookAt' > /tmp/query.txt")
-            .whenComplete(() => isMoving = false);
-
         currentStep++;
+
+        // Previously this future was left unawaited and its errors forwarded
+        // through whenComplete, so a rig that dropped mid-orbit threw into
+        // the zone once every 400ms while the orbit ticked on against a dead
+        // socket for the rest of its 24-second run. One failure ends it.
+        try {
+          await _commandService.execute(
+            "echo 'flytoview=$lookAt' > /tmp/query.txt",
+          );
+        } catch (_) {
+          finish(timer);
+        } finally {
+          isMoving = false;
+        }
       },
     );
     return true;
   }
 
+  /// Safe to call when nothing is orbiting — the Camera tab's Stop Orbit tile
+  /// is always enabled so a runaway orbit is always stoppable.
   Future<void> orbitStop() async {
     _orbitTimer?.cancel();
     _orbitTimer = null;

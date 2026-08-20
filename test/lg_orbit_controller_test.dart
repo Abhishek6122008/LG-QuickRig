@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lg_quickrig/core/ssh/ssh_exception.dart';
 import 'package:lg_quickrig/services/lg_orbit_controller.dart';
 
 import 'fakes.dart';
@@ -112,6 +113,27 @@ void main() {
       await orbit.orbitStop();
 
       expect(rig.commands, isEmpty);
+    });
+
+    // The tick future used to be unawaited with errors forwarded through
+    // whenComplete, so a rig dropping mid-orbit threw into the zone once
+    // every 400ms and kept ticking against a dead socket for the full 24s.
+    testWidgets('a rig that drops mid-orbit ends the orbit', (tester) async {
+      await orbit.orbitPlay(lat: 1, lng: 2, range: 1000);
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(orbit.isOrbitPlaying, isTrue);
+
+      rig.failWith = const LGSSHException('connection lost');
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(orbit.isOrbitPlaying, isFalse);
+
+      // And it really stopped — no further ticks once the rig is back.
+      rig.failWith = null;
+      final sentSoFar = rig.commands.length;
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(rig.commands.length, sentSoFar);
     });
   });
 }

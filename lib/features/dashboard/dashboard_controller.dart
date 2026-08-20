@@ -78,7 +78,14 @@ class DashboardController extends ChangeNotifier with WidgetsBindingObserver {
       if (creds != null && creds.host.isNotEmpty) {
         await _sshClient.connect(creds);
       }
-    } catch (_) {} finally {
+    } on LGSSHException catch (e) {
+      // Was swallowed entirely, so a failed auto-connect showed a bare
+      // "Disconnected" with no reason and no Copilot diagnose button — the
+      // one moment a rig operator most needs to be told what went wrong.
+      lastError = e.message;
+    } catch (e) {
+      lastError = 'Unexpected error: $e';
+    } finally {
       isAutoConnecting = false;
       _notify();
     }
@@ -141,6 +148,26 @@ class DashboardController extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> kmlTest() =>
       _runAction('KML Test', () => kmlSanityCheck(_kmlController, _orbit));
+
+  bool get isOrbitPlaying => _orbit.isOrbitPlaying;
+
+  /// Deliberately not routed through [_runAction]. That helper bails when the
+  /// rig is unreachable or another action is in flight — but the orbit timer
+  /// is local to this app, and a rig that just dropped mid-orbit is exactly
+  /// when a runaway orbit most needs stopping. Cancelling the timer must
+  /// always succeed; only the final camera write can fail.
+  Future<void> stopOrbit() async {
+    try {
+      await _orbit.orbitStop();
+      lastActionLabel = 'Stop Orbit';
+      lastActionTime = DateTime.now();
+    } on LGSSHException catch (e) {
+      lastError = e.message;
+    } catch (e) {
+      lastError = 'Unexpected error: $e';
+    }
+    _notify();
+  }
 
   Future<void> _runAction(
     String label,

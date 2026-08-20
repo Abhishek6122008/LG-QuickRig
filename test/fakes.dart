@@ -115,7 +115,7 @@ class FakeSSHClient extends Fake implements LGSSHClient {
       uploads.add((bytes: bytes, path: remotePath));
 
   @override
-  void dispose() => _stateCtrl.close();
+  Future<void> dispose() async => _stateCtrl.close();
 
   /// The single command containing [needle] — fails the test if there isn't
   /// exactly one, which is usually the real bug.
@@ -141,12 +141,18 @@ class FakeCommandService extends Fake implements LGCommandService {
 
   String nextOutput = '';
 
+  /// Set mid-test to make every later [execute] throw — a rig that went away
+  /// while the app was still talking to it.
+  Object? failWith;
+
   /// What readCameraTarget reports. Null = a fresh or already-consumed
   /// query.txt, which is the case the fallback logic exists for.
   ({double lat, double lng, double? range})? cameraTarget;
 
   @override
   Future<String> execute(String command) async {
+    final err = failWith;
+    if (err != null) throw err;
     commands.add(command);
     return nextOutput;
   }
@@ -158,6 +164,26 @@ class FakeCommandService extends Fake implements LGCommandService {
   @override
   Future<({double lat, double lng, double? range})?> readCameraTarget() async =>
       cameraTarget;
+
+  /// Node-level actions. The real service builds multi-node SSH strings for
+  /// these; recording the call instead lets the Copilot dispatch tests assert
+  /// intent without re-testing the command builder.
+  final List<String> actions = [];
+
+  @override
+  Future<void> reboot() async => actions.add('reboot');
+
+  @override
+  Future<void> shutdown() async => actions.add('shutdown');
+
+  @override
+  Future<void> restartServices() async => actions.add('restartServices');
+
+  @override
+  Future<void> sync() async => actions.add('sync');
+
+  @override
+  Future<void> blankScreens() async => actions.add('blankScreens');
 
   String only(String needle) =>
       commands.singleWhere((c) => c.contains(needle));
@@ -171,6 +197,9 @@ class FakeCredentialsRepository extends Fake implements CredentialsRepository {
   SSHCredentials? creds;
   String? geminiKey;
   bool copilotEnabled = false;
+
+  CopilotUsage usage = CopilotUsage.empty();
+  double dailyCapUsd = CredentialsRepository.defaultDailyCapUsd;
 
   int saveCount = 0;
 
@@ -193,9 +222,24 @@ class FakeCredentialsRepository extends Fake implements CredentialsRepository {
   Future<void> saveGeminiKey(String key) async => geminiKey = key;
 
   @override
+  Future<void> deleteGeminiKey() async => geminiKey = null;
+
+  @override
   Future<bool> loadCopilotEnabled() async => copilotEnabled;
 
   @override
   Future<void> saveCopilotEnabled(bool enabled) async =>
       copilotEnabled = enabled;
+
+  @override
+  Future<CopilotUsage> loadUsage() async => usage;
+
+  @override
+  Future<void> saveUsage(CopilotUsage u) async => usage = u;
+
+  @override
+  Future<double> loadDailyCapUsd() async => dailyCapUsd;
+
+  @override
+  Future<void> saveDailyCapUsd(double usd) async => dailyCapUsd = usd;
 }

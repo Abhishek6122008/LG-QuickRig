@@ -52,8 +52,24 @@ object LGSshExecutor {
         }
     }
 
+    // The Quick Settings tile pings on every shade pull and the status widget
+    // every 5 minutes, each costing a full SSH handshake. Pulling the shade
+    // twice in a row should not dial the rig twice.
+    private const val PING_CACHE_MS = 30_000L
+
+    private var lastPingHost: String? = null
+    private var lastPingResult = false
+    private var lastPingAt = 0L
+
     suspend fun ping(creds: LGCredentials): Boolean = withContext(Dispatchers.IO) {
-        runCatching {
+        val now = System.currentTimeMillis()
+        synchronized(this@LGSshExecutor) {
+            if (creds.host == lastPingHost && now - lastPingAt < PING_CACHE_MS) {
+                return@withContext lastPingResult
+            }
+        }
+
+        val reachable = runCatching {
             val jsch    = JSch()
             val session = jsch.getSession(creds.username, creds.host, creds.port)
             session.setPassword(creds.password)
@@ -62,7 +78,21 @@ object LGSshExecutor {
             session.connect()
             session.disconnect()
         }.isSuccess
+
+        synchronized(this@LGSshExecutor) {
+            lastPingHost = creds.host
+            lastPingResult = reachable
+            lastPingAt = System.currentTimeMillis()
+        }
+        reachable
     }
+
+    /**
+     * Drops the cached result so the next ping dials for real. Used when the
+     * user explicitly asks for a refresh — a tap that answered from cache
+     * would look like the button did nothing.
+     */
+    fun invalidatePingCache() = synchronized(this) { lastPingAt = 0L }
 
     fun rebootCmd(password: String, nodeCount: Int) =
         fanOutSudoCmd("sudo -S reboot", password, nodeCount)

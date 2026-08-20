@@ -28,12 +28,12 @@ class LGTray with TrayListener {
     // be attached or every click is dead and the icon freezes on its first
     // state forever.
     await _buildMenu();
-    _ssh.stateStream.listen(_applyState);
+    _stateSub = _ssh.stateStream.listen(_applyState);
 
     // The state stream only fires on explicit connects/disconnects and
     // detected remote closes — a periodic ping (same 5-min cadence as the
     // Android status widget) surfaces connections that died silently.
-    Timer.periodic(const Duration(minutes: 5), (_) async {
+    _pingTimer = Timer.periodic(const Duration(minutes: 5), (_) async {
       if (!_ssh.isConnected) return;
       try {
         await _lg.execute('echo ok');
@@ -43,6 +43,16 @@ class LGTray with TrayListener {
     });
 
     await _applyState(_ssh.state);
+  }
+
+  Timer? _pingTimer;
+  StreamSubscription<SSHConnectionState>? _stateSub;
+
+  Future<void> dispose() async {
+    _pingTimer?.cancel();
+    _pingTimer = null;
+    await _stateSub?.cancel();
+    trayManager.removeListener(this);
   }
 
   Future<void> _applyState(SSHConnectionState state) async {
@@ -91,6 +101,11 @@ class LGTray with TrayListener {
           onClick: (_) => _openDialog('orbit'),
         ),
         MenuItem(
+          key: 'orbitstop',
+          label: 'Stop orbit',
+          onClick: (_) => _run(_orbit.orbitStop),
+        ),
+        MenuItem(
           key: 'overlay',
           label: 'Overlay…',
           onClick: (_) => _openDialog('overlay'),
@@ -129,10 +144,23 @@ class LGTray with TrayListener {
           onClick: (_) => _run(_lg.shutdown),
         ),
         MenuItem.separator(),
-        MenuItem(key: 'quit', label: 'Quit', onClick: (_) => exit(0)),
+        MenuItem(key: 'quit', label: 'Quit', onClick: (_) => _quit()),
       ],
     );
     await trayManager.setContextMenu(menu);
+  }
+
+  /// Was a bare `exit(0)`, which left the SSH session to be reaped by the
+  /// remote sshd instead of closed.
+  Future<void> _quit() async {
+    await dispose();
+    try {
+      await _orbit.orbitStop();
+      await _ssh.dispose();
+    } catch (_) {
+      // Shutting down anyway.
+    }
+    exit(0);
   }
 
   Future<void> _kmlTest() => kmlSanityCheck(_kml, _orbit);
