@@ -38,10 +38,11 @@ class LGCommandService {
       RegExp('<$tag>([^<]*)</$tag>').firstMatch(xml)?.group(1) ?? '');
 
   Future<String> executeOnSlave(int node, String command) {
-    assert(
-      node >= 2 && node <= nodeCount,
-      'Node index $node is out of range [2, $nodeCount]',
-    );
+    // Was an assert, which release builds strip — an out-of-range node then
+    // silently SSHed to a host that doesn't exist.
+    if (node < 2 || node > nodeCount) {
+      throw LGSSHException('Node index $node is out of range [2, $nodeCount]');
+    }
     final pass = _client.credentials?.password ?? 'lg';
 
     final safePass = pass.replaceAll("'", r"'\''");

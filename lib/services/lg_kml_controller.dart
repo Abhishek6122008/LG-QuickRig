@@ -6,8 +6,15 @@ import 'lg_orbit_controller.dart';
 class LGKMLController {
   final LGCommandService _commandService;
 
-  static const _kmlDir = '/var/www/html/kml';
-  static const _kmlsFile = '/var/www/html/kmls.txt';
+  static const _webRoot = '/var/www/html';
+  static const _kmlDir = '$_webRoot/kml';
+  static const _kmlsFile = '$_webRoot/kmls.txt';
+
+  /// Pins rotate through slots 2..[_pinSlots]+1 so consecutive pins coexist —
+  /// slot 1 stays reserved for the ground overlay. Every pin used to land in
+  /// slot 2, so dropping a second pin silently erased the first.
+  static const _pinSlots = 8;
+  int _nextPinSlot = 0;
 
   // The LG image serves /var/www/html on port 81, not 80 — port-80 URLs
   // land in kmls.txt but Earth can never fetch them, so nothing renders.
@@ -40,9 +47,17 @@ class LGKMLController {
       "rm -f $_kmlDir/lgquickrig_*.kml 2>/dev/null; echo 'done'",
     );
 
+    // Ground overlay images were uploaded next to the KMLs but never removed,
+    // so every overlay ever sent stayed on the rig's disk forever.
+    await _commandService.execute(
+      "rm -f $_webRoot/lgquickrig_overlay_* 2>/dev/null || true",
+    );
+
     await _commandService.execute(
       "sed -i '/lgquickrig/d' $_kmlsFile 2>/dev/null || true",
     );
+
+    _nextPinSlot = 0;
   }
 
   Future<void> groundOverlay({
@@ -96,7 +111,7 @@ class LGKMLController {
         '</IconStyle></Style>'
         '<Point><coordinates>$lng,$lat,0</coordinates></Point>'
         '</Placemark></kml>';
-    await sendKML(kml, slot: 2);
+    await sendKML(kml, slot: 2 + (_nextPinSlot++ % _pinSlots));
   }
 
   String get _host => _commandService.host;

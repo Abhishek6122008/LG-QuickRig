@@ -45,11 +45,34 @@ void main() {
   });
 
   group('dropPin', () {
-    test('uses slot 2 so a pin and an overlay can coexist', () async {
+    test('starts at slot 2 so a pin and an overlay can coexist', () async {
       await kml.dropPin(lat: 27.17, lng: 78.04);
 
       expect(rig.sent('lgquickrig_2.kml'), isTrue);
       expect(written(), contains('<coordinates>78.04,27.17,0</coordinates>'));
+    });
+
+    // Every pin used to land in slot 2, so "pin Rome, then pin Paris" left
+    // only Paris on the rig — while the Copilot advertises dropping several.
+    test('consecutive pins take separate slots', () async {
+      await kml.dropPin(lat: 1, lng: 1);
+      await kml.dropPin(lat: 2, lng: 2);
+      await kml.dropPin(lat: 3, lng: 3);
+
+      expect(rig.sent('lgquickrig_2.kml'), isTrue);
+      expect(rig.sent('lgquickrig_3.kml'), isTrue);
+      expect(rig.sent('lgquickrig_4.kml'), isTrue);
+    });
+
+    test('slots wrap rather than growing without bound', () async {
+      for (var i = 0; i < 9; i++) {
+        await kml.dropPin(lat: 1, lng: 1);
+      }
+
+      // Slots 2..9, then back to 2 — never slot 1, which the overlay owns.
+      expect(rig.sent('lgquickrig_10.kml'), isFalse);
+      expect(rig.sent('lgquickrig_1.kml'), isFalse);
+      expect(rig.sent('lgquickrig_9.kml'), isTrue);
     });
 
     test('no description means no empty balloon on the rig', () async {
@@ -103,9 +126,18 @@ void main() {
   test('cleanKML removes the files and their kmls.txt lines', () async {
     await kml.cleanKML();
 
-    expect(rig.commands.length, 2);
+    expect(rig.commands.length, 3);
     expect(written(), contains('rm -f /var/www/html/kml/lgquickrig_*.kml'));
-    expect(rig.commands[1], contains("sed -i '/lgquickrig/d'"));
+    expect(rig.commands[2], contains("sed -i '/lgquickrig/d'"));
+  });
+
+  // Ground overlay images were uploaded beside the KMLs but never removed, so
+  // every overlay ever sent stayed on the rig's disk.
+  test('cleanKML also removes the uploaded overlay images', () async {
+    await kml.cleanKML();
+
+    expect(rig.commands[1],
+        contains('rm -f /var/www/html/lgquickrig_overlay_*'));
   });
 
   test('groundOverlay uploads the image before referencing it', () async {

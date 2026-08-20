@@ -41,6 +41,56 @@ void main() {
     expect(find.text('Connect'), findsOneWidget);
   });
 
+  // Guards the navigation the integration test drives (which only runs on a
+  // Linux/Android device in CI, so it cannot fail fast here otherwise).
+  testWidgets('the shell navigates between Rig, Camera and Settings',
+      (tester) async {
+    await tester.pumpWidget(const LGQuickRigApp());
+    await tester.pumpAndSettle();
+
+    // Each destination label must be unambiguous — the tests tap by text.
+    expect(find.text('Rig'), findsOneWidget);
+    expect(find.text('Camera'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
+
+    // Rig is the landing tab.
+    expect(find.text('Quick Actions'), findsOneWidget);
+
+    await tester.tap(find.text('Camera'));
+    await tester.pumpAndSettle();
+    expect(find.text('Fly To'), findsOneWidget);
+    expect(find.text('Stop Orbit'), findsOneWidget);
+    expect(find.text('Quick Actions'), findsNothing);
+
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    expect(find.text('Host / IP address'), findsOneWidget);
+
+    await tester.tap(find.text('Rig'));
+    await tester.pumpAndSettle();
+    expect(find.text('Quick Actions'), findsOneWidget);
+  });
+
+  // Stop Orbit is the one tile that must work with the rig unreachable: the
+  // orbit timer is local, and a rig that just dropped is when a runaway orbit
+  // most needs stopping.
+  testWidgets('Stop Orbit stays enabled while disconnected', (tester) async {
+    await tester.pumpWidget(const LGQuickRigApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Camera'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Disconnected'), findsOneWidget);
+
+    InkWell inkWellFor(String label) => tester.widget<InkWell>(
+          find.ancestor(of: find.text(label), matching: find.byType(InkWell)),
+        );
+
+    expect(inkWellFor('Fly To').onTap, isNull, reason: 'needs the rig');
+    expect(inkWellFor('Stop Orbit').onTap, isNotNull);
+  });
+
   testWidgets('Settings screen renders form fields', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
 

@@ -11,13 +11,15 @@ import com.liqtech.lg_quickrig.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @RequiresApi(Build.VERSION_CODES.N)
 class LGQuickSettingsTile : TileService() {
 
-    private val scope = CoroutineScope(Dispatchers.IO)
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var pingJob: Job? = null
 
     override fun onStartListening() {
@@ -28,6 +30,13 @@ class LGQuickSettingsTile : TileService() {
     override fun onStopListening() {
         super.onStopListening()
         pingJob?.cancel()
+    }
+
+    override fun onDestroy() {
+        // The scope outlived the service otherwise — an in-flight ping kept
+        // running against a tile that no longer exists.
+        scope.cancel()
+        super.onDestroy()
     }
 
     /** Tapping the tile opens the app — predictable, and the panel shows

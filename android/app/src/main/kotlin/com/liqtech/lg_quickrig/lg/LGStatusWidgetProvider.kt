@@ -107,14 +107,34 @@ class LGStatusWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
     ) {
+        // AlarmManager alarms do not survive a device reboot, and onEnabled
+        // only fires when the FIRST widget is placed — so without this the
+        // 5-minute auto-refresh died permanently at the next restart and only
+        // came back if the widget was removed and re-added. setRepeating with
+        // an equal PendingIntent replaces rather than stacks, so re-arming on
+        // every update is safe.
+        scheduleAlarm(context)
+
+        // goAsync() keeps the receiver alive across the ping. Without it the
+        // broadcast completes immediately and the process can be killed
+        // mid-refresh, stranding the widget on "Checking".
+        val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
-            refreshAll(context)
+            try {
+                refreshAll(context)
+            } finally {
+                pendingResult.finish()
+            }
         }
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         if (intent.action == ACTION_REFRESH) {
+            // Both the 5-minute alarm and the user tapping the header land
+            // here, and both mean "check for real" rather than reuse a cached
+            // answer.
+            LGSshExecutor.invalidatePingCache()
             val pendingResult = goAsync()
             CoroutineScope(Dispatchers.IO).launch {
                 try {

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../core/di/service_locator.dart';
+import '../../core/geo.dart';
 import '../../core/ssh/ssh_client.dart';
 import '../../services/lg_orbit_controller.dart';
-import 'current_view.dart';
 
 class CameraActionDialog extends StatefulWidget {
 
@@ -44,33 +44,19 @@ class _CameraActionDialogState extends State<CameraActionDialog> {
     super.dispose();
   }
 
-  Future<void> _useCurrentView() async {
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    final error = await fillCurrentView(
-      _orbit,
-      connected: _ssh.isConnected,
-      lat: _latCtrl,
-      lng: _lngCtrl,
-      range: _rangeCtrl,
-    );
-    if (!mounted) return;
-    setState(() {
-      _busy = false;
-      _error = error;
-    });
-  }
-
   Future<void> _run() async {
     final lat = double.tryParse(_latCtrl.text.trim());
     final lng = double.tryParse(_lngCtrl.text.trim());
     final range = double.tryParse(_rangeCtrl.text.trim());
 
-    if (!_isOrbit && (lat == null || lng == null)) {
-      setState(() => _error = 'Enter valid latitude and longitude.');
-      return;
+    // Orbit may legitimately be given nothing — it falls back to the rig's
+    // current camera. Anything actually entered still has to be in range.
+    if (!_isOrbit || lat != null || lng != null) {
+      final invalid = validateLatLng(lat, lng);
+      if (invalid != null) {
+        setState(() => _error = invalid);
+        return;
+      }
     }
     if (!_ssh.isConnected) {
       setState(() => _error = 'Not connected to the LG rig.');
@@ -142,14 +128,6 @@ class _CameraActionDialogState extends State<CameraActionDialog> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(
               labelText: 'Range (metres)',
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: _busy ? null : _useCurrentView,
-              icon: const Icon(Icons.my_location, size: 18),
-              label: const Text('Use current view'),
             ),
           ),
           if (_error != null)

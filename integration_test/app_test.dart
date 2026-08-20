@@ -25,8 +25,9 @@ void main() {
 
     expect(find.text('Disconnected'), findsOneWidget);
 
-    // Settings → fill in the rig.
-    await tester.tap(find.byTooltip('SSH Settings'));
+    // Settings → fill in the rig. Settings is a shell destination now, not a
+    // pushed route behind an AppBar icon.
+    await tester.tap(find.text('Settings'));
     await tester.pumpAndSettle();
 
     await tester.enterText(
@@ -41,10 +42,14 @@ void main() {
     await tester.tap(find.text('Save & Connect'));
     await tester.pumpAndSettle();
 
-    // Back on the dashboard, connected with what we typed.
     expect(rig.creds.creds!.host, '10.1.2.3');
     expect(rig.creds.creds!.password, 'lg-secret');
     expect(find.text('Connected'), findsOneWidget);
+
+    // Back to the Rig tab — saving connects but leaves you where you were.
+    await tester.tap(find.text('Rig'));
+    await tester.pumpAndSettle();
+
     expect(find.textContaining('lg@10.1.2.3'), findsOneWidget);
 
     // Fire a rig action and check what actually reached the master's shell.
@@ -57,5 +62,14 @@ void main() {
     expect(rig.ssh.sent('rm -f /var/www/html/kml/lgquickrig_*.kml'), isTrue);
     expect(rig.ssh.sent("sed -i '/lgquickrig/d'"), isTrue);
     expect(find.textContaining('Clean KML'), findsWidgets);
+
+    // The Camera tab is the entry point Fly To and Orbit never had in-app,
+    // and Stop Orbit had nowhere at all outside the Copilot tool.
+    await tester.tap(find.text('Camera'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Fly To'), findsOneWidget);
+    expect(find.text('Orbit'), findsOneWidget);
+    expect(find.text('Stop Orbit'), findsOneWidget);
   });
 }

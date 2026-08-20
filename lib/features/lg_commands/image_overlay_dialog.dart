@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/di/service_locator.dart';
+import '../../core/geo.dart';
 import '../../core/ssh/ssh_client.dart';
 import '../../services/lg_kml_controller.dart';
 import '../../services/lg_orbit_controller.dart';
-import 'current_view.dart';
 
 class ImageOverlayDialog extends StatefulWidget {
   const ImageOverlayDialog({super.key});
@@ -69,24 +69,6 @@ class _ImageOverlayDialogState extends State<ImageOverlayDialog> {
     super.dispose();
   }
 
-  Future<void> _useCurrentView() async {
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    final error = await fillCurrentView(
-      _orbit,
-      connected: _ssh.isConnected,
-      lat: _latCtrl,
-      lng: _lngCtrl,
-    );
-    if (!mounted) return;
-    setState(() {
-      _busy = false;
-      _error = error;
-    });
-  }
-
   Future<void> _pick() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) setState(() => _image = picked);
@@ -126,10 +108,11 @@ class _ImageOverlayDialogState extends State<ImageOverlayDialog> {
         lat = target.lat;
         lng = target.lng;
       }
-      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      final invalid = validateLatLng(lat, lng);
+      if (invalid != null) {
         setState(() {
           _busy = false;
-          _error = 'Latitude ±90, longitude ±180.';
+          _error = invalid;
         });
         return;
       }
@@ -163,7 +146,12 @@ class _ImageOverlayDialogState extends State<ImageOverlayDialog> {
       final dLng = sizeKm / 2 / (111.32 * cosLat);
 
       final bytes = await _image!.readAsBytes();
-      final name = 'overlay_${DateTime.now().millisecondsSinceEpoch}.png';
+      // The `lgquickrig_` prefix is what cleanKML's glob matches — without it
+      // these images stayed on the rig forever. The extension used to be
+      // hardcoded .png regardless of what was actually picked.
+      final name = 'lgquickrig_overlay_'
+          '${DateTime.now().millisecondsSinceEpoch}'
+          '${_extensionOf(_image!.name)}';
       await _kml.groundOverlay(
         imageBytes: bytes,
         imageName: name,
@@ -182,6 +170,18 @@ class _ImageOverlayDialogState extends State<ImageOverlayDialog> {
         });
       }
     }
+  }
+
+  /// `.png` / `.jpg` / … from the picked file, lowercased. Falls back to
+  /// `.png` for a name with no usable extension — Earth sniffs the content
+  /// type anyway, so a wrong-but-present extension still renders.
+  static String _extensionOf(String fileName) {
+    final dot = fileName.lastIndexOf('.');
+    if (dot < 0 || dot == fileName.length - 1) return '.png';
+    final ext = fileName.substring(dot).toLowerCase();
+    // Anything exotic (or a dot in a directory name) is not worth trusting
+    // into a shell path.
+    return RegExp(r'^\.[a-z0-9]{1,5}$').hasMatch(ext) ? ext : '.png';
   }
 
   Widget _numField(TextEditingController c, String label, {String? hint}) {
@@ -234,14 +234,6 @@ class _ImageOverlayDialogState extends State<ImageOverlayDialog> {
           _numField(_latCtrl, 'Latitude', hint: 'blank = current view'),
           _numField(_lngCtrl, 'Longitude', hint: 'blank = current view'),
           if (_selected == 0) _numField(_sizeCtrl, 'Size (km)'),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: _busy ? null : _useCurrentView,
-              icon: const Icon(Icons.my_location, size: 18),
-              label: const Text('Use current view'),
-            ),
-          ),
           if (_error != null)
             Padding(
               padding: const EdgeInsets.only(top: 12),

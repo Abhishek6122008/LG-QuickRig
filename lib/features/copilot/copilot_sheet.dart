@@ -35,6 +35,7 @@ class _CopilotSheetState extends State<CopilotSheet> {
   bool _loadingState = true;
   bool _enabled = false;
   bool _hasKey = false;
+  double _dailyCap = CredentialsRepository.defaultDailyCapUsd;
   bool _savingKey = false;
   bool _busy = false;
   String? _error;
@@ -56,10 +57,13 @@ class _CopilotSheetState extends State<CopilotSheet> {
   Future<void> _loadState() async {
     final enabled = await _credsRepo.loadCopilotEnabled();
     final key = await _credsRepo.loadGeminiKey();
+    final cap = await _credsRepo.loadDailyCapUsd();
+    await _copilot.loadTodayUsage();
     if (!mounted) return;
     setState(() {
       _enabled = enabled;
       _hasKey = (key ?? '').trim().isNotEmpty;
+      _dailyCap = cap;
       _loadingState = false;
     });
     final prompt = widget.initialPrompt;
@@ -113,9 +117,13 @@ class _CopilotSheetState extends State<CopilotSheet> {
   }
 
   String? _usageLabel() {
-    final tokens = _copilot.promptTokens + _copilot.outputTokens;
+    final today = _copilot.todayUsage;
+    if (today == null) return null;
+    final tokens = today.promptTokens + today.outputTokens;
     if (tokens == 0) return null;
-    return '~$tokens tokens · ~\$${_copilot.sessionCostUsd.toStringAsFixed(4)} this session';
+    final spent = _copilot.todayCostUsd;
+    return '~$tokens tokens · ~\$${spent.toStringAsFixed(4)} today '
+        '· cap \$${_dailyCap.toStringAsFixed(2)}';
   }
 
   @override

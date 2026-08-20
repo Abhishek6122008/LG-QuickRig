@@ -22,6 +22,12 @@ class LGSSHClient {
   final _stateController = StreamController<SSHConnectionState>.broadcast();
   SSHConnectionState _state = SSHConnectionState.disconnected;
 
+  /// Bumped by every [connect]; lets a superseded attempt detect that a newer
+  /// one has taken over.
+  int _connectGeneration = 0;
+
+  bool _disposed = false;
+
   Stream<SSHConnectionState> get stateStream => _stateController.stream;
   SSHConnectionState get state => _state;
   bool get isConnected => _state == SSHConnectionState.connected;
@@ -29,7 +35,9 @@ class LGSSHClient {
 
   void _setState(SSHConnectionState s) {
     _state = s;
-    _stateController.add(s);
+    // _watchForRemoteDisconnect's callback can land after dispose() has
+    // closed the controller, and adding to a closed StreamController throws.
+    if (!_disposed) _stateController.add(s);
   }
 
   Future<void> connect(
@@ -38,10 +46,24 @@ class LGSSHClient {
     Duration retryDelay = LGDefaults.retryDelay,
     Duration connectTimeout = LGDefaults.connectTimeout,
   }) async {
-    if (_state == SSHConnectionState.connecting ||
-        _state == SSHConnectionState.connected) {
+    // A connect carrying *different* credentials must never be swallowed.
+    // Auto-connect retries for up to ~36s; if the user opened Settings during
+    // that window and fixed a wrong password, the old code returned here —
+    // before `_credentials` was reassigned — and they watched the rig fail to
+    // connect on the password they had just corrected.
+    final sameCredentials = _credentials == credentials;
+    if (sameCredentials &&
+        (_state == SSHConnectionState.connecting ||
+            _state == SSHConnectionState.connected)) {
       return;
     }
+
+    // Every attempt claims a generation. A later connect bumps it, and any
+    // earlier attempt still in its retry loop sees the mismatch and bows out
+    // instead of racing the newer one for _rawClient and the state stream.
+    final generation = ++_connectGeneration;
+
+    if (_rawClient != null) await _cleanupRawClient();
 
     _setState(SSHConnectionState.connecting);
     _credentials = credentials;
@@ -49,6 +71,7 @@ class LGSSHClient {
     Exception? lastError;
 
     for (int attempt = 1; attempt <= maxRetries; attempt++) {
+      if (generation != _connectGeneration) return;
       try {
         final socket = await SSHSocket.connect(
           credentials.host,
@@ -56,27 +79,37 @@ class LGSSHClient {
           timeout: connectTimeout,
         );
 
-        _rawClient = SSHClient(
+        final client = SSHClient(
           socket,
           username: credentials.username,
           onPasswordRequest: () => credentials.password,
         );
 
-        await _rawClient!.authenticated;
+        await client.authenticated;
+
+        if (generation != _connectGeneration) {
+          client.close();
+          return;
+        }
+
+        _rawClient = client;
         _watchForRemoteDisconnect();
         _setState(SSHConnectionState.connected);
         return;
       } on SSHAuthAbortError catch (e) {
+        if (generation != _connectGeneration) return;
         await _cleanupRawClient();
         _setState(SSHConnectionState.disconnected);
         throw LGSSHException('Authentication failed: $e');
       } on Exception catch (e) {
+        if (generation != _connectGeneration) return;
         lastError = e;
         await _cleanupRawClient();
         if (attempt < maxRetries) await Future.delayed(retryDelay);
       }
     }
 
+    if (generation != _connectGeneration) return;
     _setState(SSHConnectionState.disconnected);
     throw LGSSHException(
       'Failed to connect after $maxRetries attempt(s). Last error: $lastError',
@@ -132,6 +165,11 @@ class LGSSHClient {
       await Future.wait([stdoutDone, stderrDone]);
     } on TimeoutException {
       session.close();
+      // These two drains outlive the timeout. Left unhandled, an error on
+      // either surfaces as an unhandled zone error long after this call has
+      // already thrown something useful.
+      unawaited(stdoutDone.catchError((_) {}));
+      unawaited(stderrDone.catchError((_) {}));
       throw LGSSHException(
           'Command timed out after ${timeout.inSeconds}s: "$command"');
     } catch (e) {
@@ -163,9 +201,12 @@ class LGSSHClient {
     }
   }
 
-  void dispose() {
-    _cleanupRawClient();
-    _stateController.close();
+  Future<void> dispose() async {
+    _disposed = true;
+    // Was fire-and-forget, so the socket could still be closing when the
+    // controller went away.
+    await _cleanupRawClient();
+    await _stateController.close();
   }
 
   void _watchForRemoteDisconnect() {
