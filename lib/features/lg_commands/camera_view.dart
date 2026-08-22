@@ -52,9 +52,9 @@ class CameraView extends StatelessWidget {
               icon: Icons.stop_circle_outlined,
               color: a.red,
               // Always tappable. Gating this on the connection would recreate
-              // the bug it exists to fix, and gating it on isOrbitPlaying
-              // would go stale — the orbit ends itself after 60 steps without
-              // notifying anyone. Stopping nothing is harmless.
+              // the bug it exists to fix — an orbit now runs until it is told
+              // to stop, so a rig that drops mid-orbit is exactly when this
+              // is needed most. Stopping nothing is harmless.
               enabledWhen: (_) => true,
               onTap: ctrl.stopOrbit,
             ),

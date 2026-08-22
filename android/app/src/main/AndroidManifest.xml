@@ -60,7 +60,6 @@
                 <action android:name="com.liqtech.lg_quickrig.ACTION_REBOOT" />
                 <action android:name="com.liqtech.lg_quickrig.ACTION_SHUTDOWN" />
                 <action android:name="com.liqtech.lg_quickrig.ACTION_SYNC" />
-                <action android:name="com.liqtech.lg_quickrig.ACTION_BLANK" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

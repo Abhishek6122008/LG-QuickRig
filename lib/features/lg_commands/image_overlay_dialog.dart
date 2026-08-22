@@ -91,24 +91,15 @@ class _ImageOverlayDialogState extends State<ImageOverlayDialog> {
     });
 
     try {
-      var lat = double.tryParse(_latCtrl.text.trim());
-      var lng = double.tryParse(_lngCtrl.text.trim());
       final sizeKm = double.tryParse(_sizeCtrl.text.trim());
 
-      // Blank coordinates → place it wherever the camera is right now.
-      if (lat == null || lng == null) {
-        final target = await _orbit.currentTarget();
-        if (target == null) {
-          setState(() {
-            _busy = false;
-            _error = 'Could not read the current view — enter coordinates.';
-          });
-          return;
-        }
-        lat = target.lat;
-        lng = target.lng;
-      }
-      final invalid = validateLatLng(lat, lng);
+      // Blank coordinates used to mean "wherever the camera is now", read off
+      // the rig. That dead-ended on every rig with an empty or already
+      // consumed query.txt, so coordinates are required.
+      final invalid = validateLatLng(
+        double.tryParse(_latCtrl.text.trim()),
+        double.tryParse(_lngCtrl.text.trim()),
+      );
       if (invalid != null) {
         setState(() {
           _busy = false;
@@ -116,6 +107,8 @@ class _ImageOverlayDialogState extends State<ImageOverlayDialog> {
         });
         return;
       }
+      final lat = double.parse(_latCtrl.text.trim());
+      final lng = double.parse(_lngCtrl.text.trim());
 
       if (marker != null) {
         await _kml.dropPin(
@@ -231,8 +224,8 @@ class _ImageOverlayDialogState extends State<ImageOverlayDialog> {
               icon: const Icon(Icons.image),
               label: Text(_image == null ? 'Pick image' : _image!.name),
             ),
-          _numField(_latCtrl, 'Latitude', hint: 'blank = current view'),
-          _numField(_lngCtrl, 'Longitude', hint: 'blank = current view'),
+          _numField(_latCtrl, 'Latitude', hint: 'e.g. 27.1751'),
+          _numField(_lngCtrl, 'Longitude', hint: 'e.g. 78.0421'),
           if (_selected == 0) _numField(_sizeCtrl, 'Size (km)'),
           if (_error != null)
             Padding(

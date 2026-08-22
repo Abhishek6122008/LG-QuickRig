@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lg_quickrig/core/ssh/ssh_credentials.dart';
+import 'package:lg_quickrig/core/ssh/ssh_exception.dart';
 import 'package:lg_quickrig/services/lg_command_service.dart';
 
 import 'fakes.dart';
@@ -121,26 +122,37 @@ void main() {
       expect(ssh.commands.last, contains('shutdown -h now'));
     });
 
-    test('blankScreens clears each slave kml and then kmls.txt', () async {
-      await connectWith('lg', nodes: 3);
-
-      await commands.blankScreens();
-
-      expect(ssh.only('slave_3.kml'), contains('lg@lg3'));
-      expect(ssh.only('slave_2.kml'), contains('lg@lg2'));
-      expect(ssh.commands.last, contains('> /var/www/html/kmls.txt'));
-    });
-
-    test('restartServices relaunches the master directly, slaves over ssh',
+    test('relaunch runs the master directly and the slaves over ssh',
         () async {
       await connectWith('lg', nodes: 3);
 
-      await commands.restartServices();
+      await commands.relaunch();
 
       expect(ssh.commands.length, 3);
       expect(ssh.commands[0], contains('lg@lg3'));
-      expect(ssh.commands.last, contains('lg-relaunch'));
       expect(ssh.commands.last, isNot(contains('sshpass')));
+      // The standard LG relaunch: pick lxdm or lightdm, then start it if it
+      // is stopped and restart it if it is not.
+      expect(ssh.commands.last, contains('/etc/init/lxdm.conf'));
+      expect(ssh.commands.last, contains(r'service $SERVICE start'));
+      expect(ssh.commands.last, contains(r'service $SERVICE restart'));
+    });
+
+    // The sentinel was already being printed; nothing ever read it, so a
+    // relaunch that reached none of its options still reported success.
+    test('relaunch fails loudly when a node exhausts every option', () async {
+      await connectWith('lg', nodes: 2);
+      ssh.nextOutput = 'sudo: a password is required'
+          ' ${LGCommandService.relaunchFailedMarker}';
+
+      expect(
+        () => commands.relaunch(),
+        throwsA(isA<LGSSHException>().having(
+          (e) => e.message,
+          'message',
+          allOf(contains('node(s) 1, 2'), contains('password is required')),
+        )),
+      );
     });
   });
 

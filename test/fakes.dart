@@ -177,13 +177,10 @@ class FakeCommandService extends Fake implements LGCommandService {
   Future<void> shutdown() async => actions.add('shutdown');
 
   @override
-  Future<void> restartServices() async => actions.add('restartServices');
+  Future<void> relaunch() async => actions.add('relaunch');
 
   @override
   Future<void> sync() async => actions.add('sync');
-
-  @override
-  Future<void> blankScreens() async => actions.add('blankScreens');
 
   String only(String needle) =>
       commands.singleWhere((c) => c.contains(needle));

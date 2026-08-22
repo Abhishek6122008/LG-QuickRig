@@ -11,6 +11,11 @@ dependencies:
   flutter:
     sdk: flutter
   tray_manager: ^0.2.3
+
+  # Raising/hiding the Linux window from the tray. There is no way to do
+  # it from Dart otherwise, and without it every tray menu item that
+  # opens a dialog looks like it does nothing.
+  window_manager: ^0.4.3
   image_picker: ^1.1.2
   dartssh2: ^2.9.0
 

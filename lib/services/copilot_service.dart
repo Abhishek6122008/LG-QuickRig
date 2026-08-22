@@ -376,8 +376,8 @@ class CopilotService {
     },
     {
       'name': 'orbit_start',
-      'description': 'Slowly circle the camera 360 degrees around a point. '
-          'Omit lat/lng to orbit the current view.',
+      'description': 'Circle the camera around a point. Keeps orbiting until '
+          'orbit_stop is called.',
       'parameters': {
         'type': 'object',
         'properties': {
@@ -388,6 +388,7 @@ class CopilotService {
             'description': 'Camera distance in metres.',
           },
         },
+        'required': ['lat', 'lng'],
       },
     },
     {
@@ -432,13 +433,9 @@ class CopilotService {
       'description': 'Re-sync the slave screens with the master.',
     },
     {
-      'name': 'blank_screens',
-      'description': 'Blank the slave screens by clearing their KML.',
-    },
-    {
-      'name': 'restart_services',
-      'description': 'Restart the Liquid Galaxy services on every node. '
-          'Earth reopens; the rig stays powered.',
+      'name': 'relaunch',
+      'description': 'Relaunch Google Earth on every node by restarting the '
+          'display manager. Earth reopens; the rig stays powered.',
     },
     {
       'name': 'reboot',
@@ -469,11 +466,7 @@ class CopilotService {
       // hallucinated or transposed pair reaches the rig unless it is checked
       // here. Returned as a tool failure, not thrown, so the model can say
       // what went wrong instead of the turn dying.
-      if (name == 'fly_to' || name == 'drop_pin') {
-        final invalid = validateLatLng(d('lat'), d('lng'));
-        if (invalid != null) return 'failed: $invalid';
-      }
-      if (name == 'orbit_start' && (args['lat'] != null || args['lng'] != null)) {
+      if (name == 'fly_to' || name == 'drop_pin' || name == 'orbit_start') {
         final invalid = validateLatLng(d('lat'), d('lng'));
         if (invalid != null) return 'failed: $invalid';
       }
@@ -494,14 +487,13 @@ class CopilotService {
           return 'ok';
         case 'orbit_start':
           final started = await _orbit.orbitPlay(
-            lat: d('lat'),
-            lng: d('lng'),
+            lat: d('lat')!,
+            lng: d('lng')!,
             range: d('range'),
           );
           return started
-              ? 'ok — orbiting'
-              : 'not started: an orbit is already playing or no camera '
-                  'target is known';
+              ? 'ok — orbiting until orbit_stop'
+              : 'not started: an orbit is already playing';
         case 'orbit_stop':
           await _orbit.orbitStop();
           return 'ok';
@@ -523,11 +515,8 @@ class CopilotService {
         case 'sync':
           await _commands.sync();
           return 'ok';
-        case 'blank_screens':
-          await _commands.blankScreens();
-          return 'ok';
-        case 'restart_services':
-          await _commands.restartServices();
+        case 'relaunch':
+          await _commands.relaunch();
           return 'ok';
         case 'reboot':
           await _commands.reboot();

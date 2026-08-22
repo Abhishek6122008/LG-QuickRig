@@ -68,10 +68,10 @@ class RigView extends StatelessWidget {
         ),
       ),
       ActionTileConfig(
-        label: 'Restart Services',
+        label: 'Relaunch',
         icon: Icons.refresh_rounded,
         color: a.blue,
-        onTap: ctrl.restartServices,
+        onTap: ctrl.relaunch,
       ),
       ActionTileConfig(
         label: 'Shutdown',
@@ -89,12 +89,6 @@ class RigView extends StatelessWidget {
         icon: Icons.sync,
         color: a.teal,
         onTap: ctrl.sync,
-      ),
-      ActionTileConfig(
-        label: 'Blank Screens',
-        icon: Icons.tv_off_outlined,
-        color: a.grey,
-        onTap: ctrl.blankScreens,
       ),
       ActionTileConfig(
         label: 'Clean KML',

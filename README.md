@@ -58,8 +58,8 @@
 - **Quick Settings tile** — toggle connectivity straight from the system shade, with a live SSH ping confirming reachability
 - **Camera control on the rig** — Fly To, Orbit, image overlays, colour-coded map markers, and a one-tap KML Test that proves the whole pipeline
 - **Floating widget dialogs** — widget buttons open a translucent dialog over the launcher; the full app never has to come forward
-- **Linux system tray** — full menu of rig actions, live status icon (green/red), and the camera dialogs, no window needed
-- **Gemini Copilot** — a floating chat assistant: "fly to Rome, pin it and orbit" in plain language, dispatched onto the same services the buttons use. Drives **every** rig action — camera, KML, sync, blank screens, restart services, reboot, shutdown — with reboot and shutdown held behind an explicit in-chat confirmation. Opt-in, runs on your own free-tier API key, with live token/cost tracking so it never surprises you. Diagnoses connection errors in plain language and writes info balloons for dropped pins
+- **Linux system tray** — full menu of rig actions, live status icon (green/red), and the camera dialogs; closing the window hides it to the tray instead of quitting, and a tray dialog raises the window for you
+- **Gemini Copilot** — a floating chat assistant: "fly to Rome, pin it and orbit" in plain language, dispatched onto the same services the buttons use. Drives **every** rig action — camera, KML, sync, relaunch, reboot, shutdown — with reboot and shutdown held behind an explicit in-chat confirmation. Opt-in, runs on your own free-tier API key, with live token/cost tracking so it never surprises you. Diagnoses connection errors in plain language and writes info balloons for dropped pins
 
 > The goal is a zero-friction rig operator's tool. If it takes more than one tap, it's too many.
 
@@ -87,15 +87,15 @@
 ║  │ │           Disconnect            │ │  ║   ║  │             Pick image              │  ║
 ║  └─────────────────────────────────────┘  ║   ║  └─────────────────────────────────────┘  ║
 ║                                           ║   ║                                           ║
-║  Quick Actions                            ║   ║  Latitude     blank = current view        ║
-║  ┌───────────────┐  ┌───────────────────┐ ║   ║  Longitude    blank = current view        ║
-║  │     Reboot    │  │  Restart Services │ ║   ║  Size (km)    1                           ║
+║  Quick Actions                            ║   ║  Latitude     27.1751                     ║
+║  ┌───────────────┐  ┌───────────────────┐ ║   ║  Longitude    78.0421                     ║
+║  │     Reboot    │  │      Relaunch     │ ║   ║  Size (km)    1                           ║
 ║  └───────────────┘  └───────────────────┘ ║   ║                                           ║
 ║  ┌───────────────┐  ┌───────────────────┐ ║   ║                                           ║
 ║  │    Shutdown   │  │       Sync        │ ║   ║                                           ║
 ║  └───────────────┘  └───────────────────┘ ║   ║                   Cancel      [ Send ]    ║
 ║  ┌───────────────┐  ┌───────────────────┐ ║   ╚═══════════════════════════════════════════╝
-║  │   Blank Scrn  │  │     Clean KML     │ ║
+║  │   Clean KML   │  │     KML Test      │ ║
 ║  └───────────────┘  └───────────────────┘ ║
 ║  ┌───────────────┐  ┌───────────────────┐ ║
 ║  │    Overlay    │  │     KML Test      │ ║
@@ -110,7 +110,7 @@
 ║  ┌───────────────────────────────────────────────────┐   ║
 ║  │  LG QuickRig                                      │   ║
 ║  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───────┐ │   ║
-║  │  │  Reboot  │ │   Sync   │ │  Shutdn  │ │ Blank │ │   ║
+║  │  │  Reboot  │ │   Sync   │ │  Shutdn  │ │ Clean │ │   ║
 ║  │  └──────────┘ └──────────┘ └──────────┘ └───────┘ │   ║
 ║  └───────────────────────────────────────────────────┘   ║
 ║         Command Bar widget  (4x1)                        ║
@@ -210,7 +210,7 @@ lg_quickrig/
 │   │   ├── copilot_service.dart          ← Gemini chat + function-calling dispatcher
 │   │   ├── lg_command_service.dart       ← SSH commands + camera-target readback
 │   │   ├── lg_kml_controller.dart        ← KML slots, overlays, pins/markers, clean
-│   │   └── lg_orbit_controller.dart      ← flyTo, orbit, currentTarget fallback
+│   │   └── lg_orbit_controller.dart      ← flyTo, endless orbit, currentTarget
 │   ├── features/
 │   │   ├── copilot/
 │   │   │   └── copilot_sheet.dart        ← chat UI: disabled/no-key/chat states, live cost display
@@ -219,7 +219,6 @@ lg_quickrig/
 │   │   │   └── dashboard_screen.dart     ← quick actions + widget customization dialog
 │   │   ├── lg_commands/
 │   │   │   ├── camera_action_dialog.dart ← Fly To / Orbit
-│   │   │   ├── current_view.dart         ← shared "use current view" helper
 │   │   │   └── image_overlay_dialog.dart ← image overlays + pins & markers
 │   │   └── settings/
 │   │       └── settings_screen.dart
