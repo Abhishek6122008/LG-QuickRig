@@ -122,17 +122,31 @@ object LGSshExecutor {
     val syncCmd =
         "~/scripts/lg-sync 2>/dev/null || ~/bin/lg-sync 2>/dev/null || echo 'sync not found'"
 
-    // ponytail: blanks the master playlist only; the app's Blank Screens
-    // also clears each slave_N.kml — add the fan-out here if anyone notices.
-    val blankCmd = "echo '' > /var/www/html/kmls.txt"
-
     val cleanCmd =
         "rm -f /var/www/html/kml/lgquickrig_*.kml 2>/dev/null; " +
         "sed -i '/lgquickrig/d' /var/www/html/kmls.txt 2>/dev/null; echo 'cleaned'"
 
-    val relaunchCmd =
-        "export DISPLAY=:0; pkill -9 chrome 2>/dev/null; sleep 1; " +
-        "/home/lg/bin/lg-relaunch 2>/dev/null || ~/scripts/lg-relaunch 2>/dev/null || echo 'relaunch not found'"
+    /**
+     * Mirrors LGCommandService.relaunch on the Dart side: restart the node's
+     * display manager, which is what actually relaunches Earth. The old
+     * version only knew how to run an lg-relaunch *script*, which most LG
+     * images don't ship, so the widget button reported success and did
+     * nothing.
+     *
+     * ponytail: master only, like every other command constant here. The Dart
+     * side fans out to the slaves; add fanOutSudoCmd if the widget needs it.
+     */
+    fun relaunchCmd(password: String): String {
+        val sudo = "echo '${shellEscape(password)}' | sudo -S -p ''"
+        return "if [ -f /etc/init/lxdm.conf ]; then SERVICE=lxdm; " +
+            "elif [ -f /etc/init/lightdm.conf ]; then SERVICE=lightdm; " +
+            "elif systemctl list-unit-files 2>/dev/null | grep -q '^lxdm'; then SERVICE=lxdm; " +
+            "elif systemctl list-unit-files 2>/dev/null | grep -q '^lightdm'; then SERVICE=lightdm; " +
+            "else echo 'no display manager found'; exit 0; fi; " +
+            "if service \$SERVICE status 2>&1 | grep -q stop; then " +
+            "$sudo service \$SERVICE start; " +
+            "else $sudo service \$SERVICE restart; fi"
+    }
 
     private fun shellEscape(s: String) = s.replace("'", "'\\''")
 }

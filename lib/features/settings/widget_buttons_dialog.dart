@@ -18,7 +18,6 @@ class WidgetButtonsDialog extends StatefulWidget {
     'reboot': 'Reboot',
     'shutdown': 'Shutdown',
     'sync': 'Sync',
-    'blank': 'Blank Screens',
     'overlay': 'Image Overlay',
     'flyto': 'Fly To',
     'orbit': 'Orbit',

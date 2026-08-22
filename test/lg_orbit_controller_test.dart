@@ -35,8 +35,8 @@ void main() {
     });
 
     // query.txt is empty on a fresh rig, and some LG setups consume it once
-    // Earth has read it. Without this fallback the "use current view" buttons
-    // dead-end on those rigs.
+    // Earth has read it. The Copilot's rig context and the KML test both lean
+    // on this fallback.
     test('falls back to the last position this app flew to', () async {
       rig.cameraTarget = null;
       await orbit.flyTo(lat: 41.9, lng: 12.5, range: 800);
@@ -55,24 +55,6 @@ void main() {
   });
 
   group('orbitPlay', () {
-    testWidgets('refuses when there is nowhere to orbit', (tester) async {
-      rig.cameraTarget = null;
-
-      expect(await orbit.orbitPlay(), isFalse);
-      expect(orbit.isOrbitPlaying, isFalse);
-    });
-
-    testWidgets('orbits the rig camera when given no coordinates',
-        (tester) async {
-      rig.cameraTarget = (lat: 48.85, lng: 2.29, range: 500.0);
-
-      expect(await orbit.orbitPlay(), isTrue);
-      await tester.pump(const Duration(milliseconds: 400));
-
-      expect(rig.commands.first, contains('<latitude>48.85</latitude>'));
-      await orbit.orbitStop();
-    });
-
     testWidgets('a second play is refused while one is running',
         (tester) async {
       expect(await orbit.orbitPlay(lat: 1, lng: 2), isTrue);
@@ -88,7 +70,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       await tester.pump(const Duration(milliseconds: 400));
 
-      // 60 steps over a full circle = 6 degrees per tick.
+      // 6 degrees per tick — one revolution every 24 seconds.
       expect(rig.commands[0], contains('<heading>0.0</heading>'));
       expect(rig.commands[1], contains('<heading>6.0</heading>'));
 
@@ -115,18 +97,38 @@ void main() {
       expect(rig.commands, isEmpty);
     });
 
-    // The tick future used to be unawaited with errors forwarded through
-    // whenComplete, so a rig dropping mid-orbit threw into the zone once
-    // every 400ms and kept ticking against a dead socket for the full 24s.
-    testWidgets('a rig that drops mid-orbit ends the orbit', (tester) async {
+    // A single failed write used to end the whole orbit, silently. Step 0 is
+    // heading 0, so that read as "it points north and quits".
+    testWidgets('one failed write does not end the orbit', (tester) async {
       await orbit.orbitPlay(lat: 1, lng: 2, range: 1000);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      rig.failWith = const LGSSHException('blip');
       await tester.pump(const Duration(milliseconds: 400));
       expect(orbit.isOrbitPlaying, isTrue);
 
-      rig.failWith = const LGSSHException('connection lost');
+      rig.failWith = null;
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(orbit.isOrbitPlaying, isTrue);
+      expect(rig.commands.last, contains('<heading>12.0</heading>'));
+
+      await orbit.orbitStop();
+    });
+
+    testWidgets('three consecutive failures give up and report', (tester) async {
+      String? reported;
+      orbit.onOrbitError = (m) => reported = m;
+
+      await orbit.orbitPlay(lat: 1, lng: 2, range: 1000);
       await tester.pump(const Duration(milliseconds: 400));
 
+      rig.failWith = const LGSSHException('connection lost');
+      for (var i = 0; i < 3; i++) {
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+
       expect(orbit.isOrbitPlaying, isFalse);
+      expect(reported, contains('connection lost'));
 
       // And it really stopped — no further ticks once the rig is back.
       rig.failWith = null;
@@ -134,6 +136,22 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       await tester.pump(const Duration(milliseconds: 400));
       expect(rig.commands.length, sentSoFar);
+    });
+
+    // The whole point of the rewrite: it used to stop itself after 60 steps.
+    testWidgets('keeps going well past a full revolution', (tester) async {
+      await orbit.orbitPlay(lat: 1, lng: 2, range: 1000);
+
+      for (var i = 0; i < 70; i++) {
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+
+      expect(orbit.isOrbitPlaying, isTrue);
+      expect(rig.commands.length, 70);
+      // Step 65 is 65 * 6 = 390 degrees, i.e. 30 into the second lap.
+      expect(rig.commands[65], contains('<heading>30.0</heading>'));
+
+      await orbit.orbitStop();
     });
   });
 }

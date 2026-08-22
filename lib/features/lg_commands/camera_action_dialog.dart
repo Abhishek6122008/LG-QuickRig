@@ -49,14 +49,13 @@ class _CameraActionDialogState extends State<CameraActionDialog> {
     final lng = double.tryParse(_lngCtrl.text.trim());
     final range = double.tryParse(_rangeCtrl.text.trim());
 
-    // Orbit may legitimately be given nothing — it falls back to the rig's
-    // current camera. Anything actually entered still has to be in range.
-    if (!_isOrbit || lat != null || lng != null) {
-      final invalid = validateLatLng(lat, lng);
-      if (invalid != null) {
-        setState(() => _error = invalid);
-        return;
-      }
+    // Both actions need real coordinates. Orbit used to accept blank fields
+    // and read the rig's current view, which dead-ended on every rig whose
+    // query.txt is empty or already consumed.
+    final invalid = validateLatLng(lat, lng);
+    if (invalid != null) {
+      setState(() => _error = invalid);
+      return;
     }
     if (!_ssh.isConnected) {
       setState(() => _error = 'Not connected to the LG rig.');
@@ -70,13 +69,12 @@ class _CameraActionDialogState extends State<CameraActionDialog> {
 
     try {
       if (_isOrbit) {
-        final started = await _orbit.orbitPlay(lat: lat, lng: lng, range: range);
+        final started =
+            await _orbit.orbitPlay(lat: lat!, lng: lng!, range: range);
         if (!started && mounted) {
           setState(() {
             _busy = false;
-            _error = _orbit.isOrbitPlaying
-                ? 'An orbit is already running.'
-                : 'Could not read the current view — enter coordinates.';
+            _error = 'An orbit is already running.';
           });
           return;
         }

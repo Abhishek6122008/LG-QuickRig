@@ -1,14 +1,15 @@
 import 'dart:convert';
 
+import '../core/constants.dart';
 import 'lg_command_service.dart';
 import 'lg_orbit_controller.dart';
 
 class LGKMLController {
   final LGCommandService _commandService;
 
-  static const _webRoot = '/var/www/html';
-  static const _kmlDir = '$_webRoot/kml';
-  static const _kmlsFile = '$_webRoot/kmls.txt';
+  static const _webRoot = LGPaths.webRoot;
+  static const _kmlDir = LGPaths.kmlDir;
+  static const _kmlsFile = LGPaths.kmlsFile;
 
   /// Pins rotate through slots 2..[_pinSlots]+1 so consecutive pins coexist —
   /// slot 1 stays reserved for the ground overlay. Every pin used to land in
@@ -16,9 +17,7 @@ class LGKMLController {
   static const _pinSlots = 8;
   int _nextPinSlot = 0;
 
-  // The LG image serves /var/www/html on port 81, not 80 — port-80 URLs
-  // land in kmls.txt but Earth can never fetch them, so nothing renders.
-  static const _webPort = 81;
+  static const _webPort = LGPaths.webPort;
 
   LGKMLController(this._commandService);
 

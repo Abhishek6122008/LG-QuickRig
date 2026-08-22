@@ -39,6 +39,12 @@ class DashboardController extends ChangeNotifier with WidgetsBindingObserver {
       _notify();
     });
     WidgetsBinding.instance.addObserver(this);
+    // A dead orbit used to vanish without a trace; surface it like any other
+    // rig failure.
+    _orbit.onOrbitError = (message) {
+      lastError = message;
+      _notify();
+    };
     _tryAutoConnect();
   }
 
@@ -59,6 +65,7 @@ class DashboardController extends ChangeNotifier with WidgetsBindingObserver {
     _disposed = true;
     WidgetsBinding.instance.removeObserver(this);
     _stateSub.cancel();
+    _orbit.onOrbitError = null;
     super.dispose();
   }
 
@@ -134,14 +141,11 @@ class DashboardController extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> shutdown() =>
       _runAction('Shutdown', _commandService.shutdown);
 
-  Future<void> restartServices() =>
-      _runAction('Restart Services', _commandService.restartServices);
+  Future<void> relaunch() =>
+      _runAction('Relaunch', _commandService.relaunch);
 
   Future<void> sync() =>
       _runAction('Sync', _commandService.sync);
-
-  Future<void> blankScreens() =>
-      _runAction('Blank Screens', _commandService.blankScreens);
 
   Future<void> cleanKML() =>
       _runAction('Clean KML', _kmlController.cleanKML);

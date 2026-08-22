@@ -19,3 +19,17 @@ class LGDefaults {
   static const int maxRetries = 3;
   static const Duration retryDelay = Duration(seconds: 2);
 }
+
+/// Where the LG master serves its KML from. Shared so the command service and
+/// the KML controller can't drift apart on the web root or the port.
+class LGPaths {
+  LGPaths._();
+
+  static const String webRoot = '/var/www/html';
+  static const String kmlDir = '$webRoot/kml';
+  static const String kmlsFile = '$webRoot/kmls.txt';
+
+  // The LG image serves /var/www/html on port 81, not 80 — port-80 URLs land
+  // in kmls.txt but Earth can never fetch them, so nothing renders.
+  static const int webPort = 81;
+}

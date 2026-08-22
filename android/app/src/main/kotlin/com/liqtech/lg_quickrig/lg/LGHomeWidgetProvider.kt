@@ -33,7 +33,6 @@ class LGHomeWidgetProvider : AppWidgetProvider() {
         const val ACTION_REBOOT   = "com.liqtech.lg_quickrig.ACTION_REBOOT"
         const val ACTION_SHUTDOWN = "com.liqtech.lg_quickrig.ACTION_SHUTDOWN"
         const val ACTION_SYNC     = "com.liqtech.lg_quickrig.ACTION_SYNC"
-        const val ACTION_BLANK    = "com.liqtech.lg_quickrig.ACTION_BLANK"
 
         private const val PREFS_NAME  = "LGQuickRigWidgetPrefs"
         private const val KEY_BUTTONS = "home_buttons"
@@ -47,7 +46,6 @@ class LGHomeWidgetProvider : AppWidgetProvider() {
             // ◉ not ⏻ — the U+23FB power symbol is missing from the widget font.
             WidgetAction("shutdown", "Shutdown", "◉", 0xFFD93025.toInt(), 0x1AFF3B30, ACTION_SHUTDOWN),
             WidgetAction("sync",     "Sync",     "⇄", 0xFF12A4AF.toInt(), 0x1A12A4AF, ACTION_SYNC),
-            WidgetAction("blank",    "Blank",    "□", 0xFF5F6368.toInt(), 0x1A5F6368, ACTION_BLANK),
             WidgetAction("overlay",  "Overlay",  "▣", 0xFF9334E6.toInt(), 0x1A9334E6, null),
             WidgetAction("flyto",    "Fly To",   "◎", 0xFF00897B.toInt(), 0x1A00B5A3, null),
             WidgetAction("orbit",    "Orbit",    "⟲", 0xFF2962FF.toInt(), 0x1A3D7EFF, null),
@@ -135,7 +133,7 @@ class LGHomeWidgetProvider : AppWidgetProvider() {
         val action = intent.action ?: return
         if (action !in listOf(
                 ACTION_CLEAN, ACTION_RELAUNCH, ACTION_REBOOT,
-                ACTION_SHUTDOWN, ACTION_SYNC, ACTION_BLANK)) return
+                ACTION_SHUTDOWN, ACTION_SYNC)) return
 
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
@@ -161,7 +159,6 @@ class LGHomeWidgetProvider : AppWidgetProvider() {
             ACTION_REBOOT   -> "Reboot"
             ACTION_SHUTDOWN -> "Shutdown"
             ACTION_SYNC     -> "Sync"
-            ACTION_BLANK    -> "Blank"
             else            -> return
         }
 
@@ -169,11 +166,10 @@ class LGHomeWidgetProvider : AppWidgetProvider() {
 
         val command = when (action) {
             ACTION_CLEAN    -> LGSshExecutor.cleanCmd
-            ACTION_RELAUNCH -> LGSshExecutor.relaunchCmd
+            ACTION_RELAUNCH -> LGSshExecutor.relaunchCmd(creds.password)
             ACTION_REBOOT   -> LGSshExecutor.rebootCmd(creds.password, creds.nodeCount)
             ACTION_SHUTDOWN -> LGSshExecutor.shutdownCmd(creds.password, creds.nodeCount)
             ACTION_SYNC     -> LGSshExecutor.syncCmd
-            ACTION_BLANK    -> LGSshExecutor.blankCmd
             else            -> return
         }
 
